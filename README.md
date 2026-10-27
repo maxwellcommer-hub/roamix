@@ -8,6 +8,25 @@ The public home of Roamix's legal documents, served by GitHub Pages:
 | Terms of Service | https://maxwellcommer-hub.github.io/roamix/terms | Public copy of the in-app Terms, so they are readable before install. |
 | Support | https://maxwellcommer-hub.github.io/roamix/support | **Required** by App Store Connect; goes in the Support URL field. |
 | Landing | https://maxwellcommer-hub.github.io/roamix/ | Links the three. |
+| Terms of Sale | https://maxwellcommer-hub.github.io/roamix/terms-of-sale | The agreement for buying a printed plaque. |
+| Payment received | https://maxwellcommer-hub.github.io/roamix/paid | Stripe's after-payment redirect; hands back to the app. |
+
+### One folder per app version
+
+The pages above are the documents for Roamix 1.0 and 1.1, and they stay exactly as they are.
+Roamix **1.2** (the first version that can order a printed plaque) reads its own copies in
+`1.2/`, so publishing it changed nothing an earlier version links to:
+
+| Page | URL |
+|------|-----|
+| Privacy Policy | https://maxwellcommer-hub.github.io/roamix/1.2/privacy |
+| Terms of Service | https://maxwellcommer-hub.github.io/roamix/1.2/terms |
+| Terms of Sale | https://maxwellcommer-hub.github.io/roamix/1.2/terms-of-sale |
+| Support | https://maxwellcommer-hub.github.io/roamix/1.2/support |
+| Landing | https://maxwellcommer-hub.github.io/roamix/1.2/ |
+
+A later version that changes the documents gets a folder of its own the same way. `/paid` is
+shared: only 1.2 and later can pay, so it has no older copy to protect.
 
 ## Keeping the copies in step
 
@@ -18,6 +37,7 @@ identical copy under `docs/` so the two can be diffed:
 
 ```
 diff -q ~/Roamix/docs/privacy.html ~/roamix-privacy/privacy.html
+diff -rq ~/Roamix/docs/1.2 ~/roamix-privacy/1.2
 ```
 
 Four surfaces have to agree with each other, and a change to any one of them means
