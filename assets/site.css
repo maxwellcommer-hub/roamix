@@ -78,12 +78,40 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .nav.onink .brand, .nav.onink .links a { color: var(--ink); }
 .nav.onink .links a.on { color: var(--paper); }
 .nav.onink .pick { background: var(--ink); }
+/* phones get the whole bar too, just tighter: a smaller mark, snug links, and a short
+   "Get" on the button (the full "Get the app" stays as its accessible name) */
 @media (max-width: 640px) {
-  .nav { height: 52px; top: calc(env(safe-area-inset-top, 0px) + 10px); }
-  .nav .links { display: none; }
-  .nav .brand { flex: 1 1 auto; }
-  .nav .cta { flex-basis: 150px; }
+  .nav { height: 48px; width: calc(100% - 16px); top: calc(env(safe-area-inset-top, 0px) + 10px); }
+  .nav .row { gap: 8px; }
+  .nav .brand { flex: 0 0 62px; }
+  .nav .brand svg { height: 19px; }
+  .nav .links { gap: 0; }
+  .nav .links a { font-size: 13px; padding: 9px 7px; }
+  .nav .pick { top: 6px; height: 36px; }
+  .nav .cta { flex: 0 0 64px; padding: 5px; }
+  .nav .cta a { font-size: 13px; }
+  .nav .cta a .long { display: none; }
 }
+@media (min-width: 641px) { .nav .cta a .short { display: none; } }
+
+/* ── Page transitions: going between the home page and the documents, the nav stays put, the
+      red header morphs from one page's shape into the other's, and the rest of the page
+      gives way and rises in (cross-document View Transitions; browsers without them just
+      load the page). ── */
+@view-transition { navigation: auto; }
+.nav { view-transition-name: nav; }
+.hero, .doc-head { view-transition-name: page-head; }
+::view-transition-group(page-head) { animation-duration: .7s; animation-timing-function: var(--ease-settle); }
+::view-transition-old(page-head), ::view-transition-new(page-head) { height: 100%; width: 100%; object-fit: cover; object-position: top center; }
+::view-transition-old(page-head) { animation: vt-out .3s ease both; }
+::view-transition-new(page-head) { animation: vt-in .5s ease .1s both; }
+::view-transition-old(root) { animation: vt-out .28s ease both; }
+::view-transition-new(root) { animation: vt-rise .62s var(--ease-appear) .08s both; }
+::view-transition-group(nav) { animation-duration: .5s; animation-timing-function: var(--ease-settle); }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; } }
+@keyframes vt-rise { from { opacity: 0; transform: translateY(28px); } }
+@media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
 
 /* ═══ Hero — the atlas, vermilion ground, land in the deep pull ═══ */
 .hero { position: relative; min-height: max(100vh, 640px); min-height: max(100lvh, 640px); display: grid; place-items: end center; overflow: hidden; background: var(--verm); color: var(--paper); isolation: isolate; }
@@ -129,15 +157,24 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .gbtn span svg { width: 18px; height: 18px; fill: currentColor; }
 
 /* ═══ Panorama — the store's ten plates, a continuous strip you scroll sideways ═══ */
-.pano { position: relative; background: var(--ink); }
+/* no ground of its own: each plate carries its own ink, and anything showing past them is the
+   page's current tint (site.js), so no black can appear under a phone's toolbar */
+.pano { position: relative; background: transparent; }
 /* the frame runs past the bottom of the screen, so nothing behind it can show under a phone's
    floating toolbar, however that toolbar measures the viewport */
 .pano .pin { position: sticky; top: 0; height: calc(100vh + 96px); height: calc(100lvh + 96px); overflow: hidden; }
 .pano .strip { display: flex; height: 100%; will-change: transform; }
 .pano .strip.scroll-driven { animation: strip-slide linear both; animation-timeline: scroll(root block); }
+/* Safari 26 tints its bars from any sticky/fixed element near a screen edge, so where the
+   browser can do it, the frame is NOT sticky: it sits at the top of the section and a
+   scroll-driven animation carries it down exactly as fast as the page scrolls — pinned to
+   the eye, invisible to Safari's tinting, and moved on the compositor. */
+.pano.scroll-driven .pin { position: absolute; top: 0; left: 0; right: 0; animation: pin-hold linear both; animation-timeline: scroll(root block); }
+@keyframes pin-hold { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(0, var(--hold, 0px), 0); } }
 @keyframes strip-slide { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--travel, 0px), 0, 0); } }
 .plate { position: relative; flex: none; height: 100%; aspect-ratio: 1320 / 2868; container-type: inline-size; overflow: hidden; }
-.plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .5s ease; }
+.plate img.loaded { opacity: 1; }
 .plate .copy { position: absolute; left: 7.65cqw; right: 6cqw; top: 11.1cqw; }
 .plate h3 { margin: 0; font: 800 14.4cqw/0.93 var(--display); letter-spacing: -0.035em; }
 .plate p { margin: 2.6cqw 0 0; font: 400 4.25cqw/1.32 var(--text); letter-spacing: -0.005em; }

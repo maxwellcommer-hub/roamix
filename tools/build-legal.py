@@ -97,7 +97,7 @@ def shell(p, base, current):
       <a href="{privacy}"{cur("privacy")}>Privacy</a>
       <a href="{base}#plaque">Plaque</a>
     </div>
-    <div class="cta"><a href="{APP}">Get the app</a></div>
+    <div class="cta"><a href="{APP}" aria-label="Get Roamix on the App Store"><span class="long">Get the app</span><span class="short">Get</span></a></div>
   </div>
 </nav>
 
