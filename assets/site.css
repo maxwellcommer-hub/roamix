@@ -48,61 +48,40 @@ a { color: inherit; }
 .mono { font-family: var(--mono); font-weight: 400; letter-spacing: .04em; text-transform: uppercase; }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; border-radius: 8px; }
 
-/* ── Goo: the filter lives once in the page (#goo / #goo-soft); a layer that wears it
-      becomes one opaque shape wherever its children come close. Text never goes in
-      a goo layer — it rides a twin layer above, so it stays crisp. ── */
-.goo { filter: url(#goo); }
-.goo-soft { filter: url(#goo-soft); }
+/* ── Goo: OUR liquid glass, fully opaque. Not a blur filter — a blur-and-threshold renders soft
+      and lumpy (it bulges wherever two shapes overlap, and Safari rasterises it at 1x). Each goo
+      surface is a <canvas> that site.js paints as ONE vector outline: the smooth union of the
+      shapes' signed distance fields, contoured and filled. Crisp at any zoom, exact where the
+      shapes stand apart, necking only where they meet. Text never sits in it. ── */
+canvas.goo { position: absolute; pointer-events: none; display: block; }
 
-/* ═══ Nav — the floating bar, pinching into three pills as you scroll ═══ */
-.nav { position: fixed; z-index: 50; top: 14px; left: 50%; translate: -50% 0; width: min(760px, calc(100% - 24px)); height: 56px; }
-.nav .shapes, .nav .row { position: absolute; inset: 0; display: flex; align-items: stretch; }
-.nav .shapes { pointer-events: none; }
-.nav { transition: translate var(--t-settle) var(--ease-settle); }
+/* ═══ Nav — one bar at the top; pinches into pills as you scroll ═══ */
+.nav { position: fixed; z-index: 50; top: 14px; left: 50%; translate: -50% 0; width: min(760px, calc(100% - 24px)); height: 56px; transition: translate var(--t-settle) var(--ease-settle); }
 .nav.away { translate: -50% -90px; }
-/* over a press-black ground the pills print in stock instead */
-.nav .shapes i { transition: margin var(--t-goo) var(--ease-goo), flex-basis var(--t-goo) var(--ease-goo), background-color .35s; }
-.nav.onink .shapes i { background: var(--paper); }
-.nav.onink .brand, .nav.onink .links a { color: var(--ink); }
-.nav.onink .pick b { background: var(--ink); }
-.nav.onink .links a.on { color: var(--paper); }
-.nav .shapes i { display: block; background: var(--ink); border-radius: 28px; transition: margin var(--t-goo) var(--ease-goo), flex-basis var(--t-goo) var(--ease-goo); }
-.nav .row { justify-content: space-between; }
-.nav .s-brand, .nav .brand { flex-basis: 132px; }
-.nav .s-links, .nav .links { flex: 1 1 auto; }
-.nav .s-cta, .nav .cta { flex-basis: 168px; }
-/* At rest at the top: one bar (the pills overlap, so the goo fuses them). */
-.nav .s-links { margin: 0 -24px; }
-.nav.split .s-links { margin: 0 18px; }
-.nav.split .links { margin: 0 18px; }
-.nav .links { transition: margin var(--t-goo) var(--ease-goo); position: relative; }
-
-.nav .brand { display: flex; align-items: center; gap: 9px; padding-left: 20px; color: var(--paper); text-decoration: none; }
-.nav .brand svg { height: 22px; width: auto; fill: currentColor; }
-.nav .links { display: flex; align-items: center; justify-content: center; gap: 2px; }
+.nav canvas.goo { inset: 0; width: 100%; height: 100%; }
+.nav .row { position: absolute; inset: 0; display: flex; align-items: stretch; gap: 18px; }
+.nav .brand { flex: 0 0 112px; display: flex; align-items: center; justify-content: center; color: var(--paper); text-decoration: none; transition: color .3s; }
+.nav .brand svg { height: 25px; width: auto; fill: currentColor; }
+.nav .links { flex: 1 1 auto; position: relative; display: flex; align-items: center; justify-content: center; gap: 2px; }
 .nav .links a { position: relative; z-index: 1; font: 500 14px/1 var(--text); color: var(--paper); text-decoration: none; padding: 10px 14px; border-radius: 20px; transition: color .25s; }
 .nav .links a.on { color: var(--ink); }
-/* the stock droplet under the hovered/current link — two blobs on different springs,
-   so it stretches between links and snaps round on arrival */
-.nav .pick { position: absolute; inset: 0; pointer-events: none; }
-.nav .pick b { position: absolute; top: 8px; height: 40px; left: 0; width: 60px; border-radius: 20px; background: var(--paper); opacity: 0; transition: transform .55s var(--ease-goo), width .55s var(--ease-goo), opacity .2s; }
-.nav .pick b + b { transition: transform .8s var(--ease-settle), width .8s var(--ease-settle), opacity .2s; }
-.nav .pick.live b { opacity: 1; }
-.nav .cta { display: flex; align-items: center; justify-content: center; padding: 6px; }
-.nav .cta a { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 100%; border-radius: 22px; background: var(--verm); color: var(--paper); text-decoration: none; font: 500 14px/1 var(--text); transition: scale var(--t-press) var(--ease-press), background .2s; }
+/* the stock lozenge under the hovered/current link: its two ends run on different springs,
+   so it stretches between links (thinning as it does) and lands round — site.js drives it */
+.nav .pick { position: absolute; left: 0; top: 8px; height: 40px; width: 0; border-radius: 20px; background: var(--paper); opacity: 0; transition: opacity .2s, background-color .3s; pointer-events: none; will-change: transform, width; }
+.nav .pick.live { opacity: 1; }
+.nav .cta { flex: 0 0 168px; display: flex; padding: 6px; }
+.nav .cta a { display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 22px; background: var(--verm); color: var(--paper); text-decoration: none; font: 500 14px/1 var(--text); transition: scale var(--t-press) var(--ease-press), background-color .2s; }
 .nav .cta a:hover { background: var(--verm-deep); }
 .nav .cta a:active { scale: .95; }
+/* over a press-black ground the pills print in stock instead (site.js repaints the canvas) */
+.nav.onink .brand, .nav.onink .links a { color: var(--ink); }
+.nav.onink .links a.on { color: var(--paper); }
+.nav.onink .pick { background: var(--ink); }
 @media (max-width: 640px) {
-  /* phones: two pills — the mark and the button — fused at the top, necking apart on scroll */
   .nav { height: 52px; top: 10px; }
-  .nav .links, .nav .shapes .s-links { display: none; }
-  .nav .s-brand, .nav .brand { flex: 1 1 auto; }
-  .nav .s-cta, .nav .cta { flex: 0 0 150px; }
-  .nav .s-cta { margin-left: -24px; transition: margin var(--t-goo) var(--ease-goo), background-color .35s; }
-  .nav.split .s-cta { margin-left: 18px; }
-  .nav.split .cta { margin-left: 18px; }
-  .nav .cta { transition: margin var(--t-goo) var(--ease-goo); }
-  .nav .brand { padding-left: 18px; }
+  .nav .links { display: none; }
+  .nav .brand { flex: 1 1 auto; }
+  .nav .cta { flex-basis: 150px; }
 }
 
 /* ═══ Hero — the atlas, vermilion ground, land in the deep pull ═══ */
@@ -141,15 +120,10 @@ a { color: inherit; }
 .in .rise, .rise.in { opacity: 1; translate: 0 0; }
 .d1 { transition-delay: .08s; } .d2 { transition-delay: .16s; } .d3 { transition-delay: .24s; } .d4 { transition-delay: .32s; }
 
-/* ── The goo button: one opaque pill; on hover two droplets bud off its ends and fall back ── */
-.gbtn { position: relative; display: inline-grid; place-items: center; height: 64px; padding: 0 34px; text-decoration: none; isolation: isolate; --fill: var(--paper); --on: var(--ink); }
-.gbtn .shapes { position: absolute; inset: -30px -40px; z-index: -1; pointer-events: none; }
-.gbtn .shapes i { position: absolute; background: var(--fill); border-radius: 999px; }
-.gbtn .shapes .body { inset: 30px 40px; transition: inset var(--t-press) var(--ease-press); }
-.gbtn .shapes .drop { width: 26px; height: 26px; top: calc(50% - 13px); left: calc(50% - 13px); transition: translate .7s var(--ease-goo), scale .7s var(--ease-goo); scale: .4; }
-.gbtn:hover .shapes .d-a, .gbtn:focus-visible .shapes .d-a { translate: calc(-50% - 18px - var(--w, 120px) / 2) -2px; scale: 1; }
-.gbtn:hover .shapes .d-b, .gbtn:focus-visible .shapes .d-b { translate: calc(50% + 18px + var(--w, 120px) / 2) 3px; scale: .8; }
-.gbtn:active .shapes .body { inset: 33px 44px; }
+/* ── The goo button: one opaque pill; on hover two droplets bud off its ends (canvas, site.js) ── */
+.gbtn { position: relative; display: inline-grid; place-items: center; height: 64px; padding: 0 34px; text-decoration: none; isolation: isolate; --fill: #F7F4ED; --on: var(--ink); transition: scale var(--t-press) var(--ease-press); }
+.gbtn:active { scale: .97; }
+.gbtn canvas.goo { inset: -40px -64px; width: calc(100% + 128px); height: calc(100% + 80px); z-index: -1; }
 .gbtn span { color: var(--on); font: 500 17px/1 var(--text); display: flex; align-items: center; gap: 10px; }
 .gbtn span svg { width: 18px; height: 18px; fill: currentColor; }
 
@@ -200,8 +174,7 @@ a { color: inherit; }
 .miles { background: var(--verm-deep); color: var(--paper); }
 .miles .inner { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(28px, 5vw, 70px); align-items: center; }
 .bubbles { position: relative; aspect-ratio: 1 / .92; width: 100%; touch-action: pan-y; }
-.bubbles .ink { position: absolute; inset: 0; }
-.bubbles .ink i { position: absolute; left: 0; top: 0; border-radius: 999px; will-change: transform; }
+.bubbles canvas.goo { inset: 0; width: 100%; height: 100%; }
 .bubbles .labels { position: absolute; inset: 0; pointer-events: none; }
 .bubbles .labels > div { position: absolute; left: 0; top: 0; display: grid; place-items: center; text-align: center; will-change: transform; }
 .bubbles .labels b { display: block; font: 400 clamp(17px, 2.1vw, 26px)/1 var(--mono); letter-spacing: -.01em; }
@@ -249,7 +222,7 @@ a { color: inherit; }
 .foot .inner { max-width: 1120px; margin: 0 auto; }
 .foot .big { display: grid; grid-template-columns: 1fr auto; gap: 30px; align-items: end; }
 .foot h2 { margin: 0; font: 800 clamp(40px, 6.4vw, 88px)/0.95 var(--display); letter-spacing: -.03em; }
-.foot .gbtn { --fill: var(--verm); --on: var(--paper); }
+.foot .gbtn { --fill: #E8401E; --on: var(--paper); }
 .foot .wm { margin: clamp(60px, 9vw, 110px) 0 0; width: 100%; height: auto; fill: var(--paper); }
 .foot .cols { margin-top: 40px; display: grid; grid-template-columns: repeat(4, auto); justify-content: space-between; gap: 24px; font: 400 12px/1.9 var(--mono); letter-spacing: .05em; text-transform: uppercase; }
 .foot .cols h4 { margin: 0 0 8px; font: inherit; color: var(--chrome); }
