@@ -61,6 +61,15 @@ old absolute `/roamix/…` links to the right place once the domain is on.
 shell** (same head, tokens, header field and footer) so the four pages can never drift
 apart visually. Regenerate rather than hand-editing the shared chrome.
 
+## The 1.2 pages share the home page's design
+
+`1.2/*.html` and `paid.html` are rebuilt by `python3 tools/build-legal.py`: it lifts each page's
+title, header lines and `<main>` verbatim and wraps them in the shared shell (goo nav, poster
+header, reading column with an "On this page" list, the home footer; `assets/legal.css` +
+`assets/legal.js` on top of `assets/site.*`). Edit the WORDS inside `<main>` and re-run it.
+`python3 tools/build-legal.py --check` proves the visible text matches git HEAD. The 1.0/1.1
+pages at the root are frozen and are not rebuilt.
+
 ## Licence
 
 The pages and their wording are © 2026 Maxwell Commer — see [LICENSE](LICENSE). The
