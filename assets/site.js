@@ -200,35 +200,15 @@
   // the tour, whichever plate) sits at the top of the screen — and the band reads as the
   // page running on up to the edge.
   const themeMeta = document.querySelector('meta[name="theme-color"]');
-  // Safari 26 ignores theme-color. It colours its status bar and toolbar from a fixed/sticky
-  // element at each edge (within ~4px of the top / 3px of the bottom, 80%+ wide, 3px+ tall),
-  // and only re-reads a strip's colour when the strip APPEARS. So: a 12px solid strip at the
-  // top edge (iOS only, site.css), re-inserted whenever its colour changes.
-  const strip = side => { const d = document.createElement('div'); d.className = 'tintbar ' + side; d.setAttribute('aria-hidden', 'true'); return d; };
-  const bars = { top: strip('top') }, barColour = { top: '' };
-  const setBar = (side, c) => {
-    if (!c || barColour[side] === c) return;
-    barColour[side] = c;
-    const old = bars[side], fresh = strip(side); fresh.style.backgroundColor = c;
-    bars[side] = fresh; old.remove(); document.body.append(fresh);
-  };
-  let tintSpans = [], tintNow = '', plateTint = null, tourPin = null;
+  let tintSpans = [], tintNow = '', plateTint = null;
   const measureTint = () => { tintSpans = $$('[data-tint]').filter(el => !el.classList.contains('plate')).map(el => { const r = el.getBoundingClientRect(); return [r.top + scrollY, r.bottom + scrollY, el.dataset.tint]; }); };
-  const colourAt = y => { for (const [t, b, col] of tintSpans) if (t <= y && b > y) return col; return null; };
   const tint = () => {
     if (!themeMeta) return;
-    const tourC = plateTint ? plateTint() : null;
-    const top = tourC || colourAt(scrollY + 1);
-    if (top && top !== tintNow) {
-      themeMeta.setAttribute('content', top); tintNow = top;
-      document.documentElement.style.backgroundColor = top; document.body.style.backgroundColor = top;
-    }
-    setBar('top', top);
-    // The tour's frame is sticky (native, so it never trails the finger), and Safari reads a
-    // sticky element's own colour too: it wears the colour of the plate under the middle.
-    if (tourPin) {
-      const pc = tourC || tourPin.dataset.first;
-      if (pc && tourPin.dataset.cur !== pc) { tourPin.style.backgroundColor = pc; tourPin.dataset.cur = pc; }
+    let c = plateTint ? plateTint() : null;
+    if (!c) { const y = scrollY + 1; for (const [t, b, col] of tintSpans) if (t <= y && b > y) { c = col; break; } }
+    if (c && c !== tintNow) {
+      themeMeta.setAttribute('content', c); tintNow = c;
+      document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c;
     }
   };
   measureTint(); addEventListener('load', measureTint);
@@ -423,7 +403,6 @@
   // each plate shows its own ink until its picture arrives, and the picture fades in over it;
   // the pictures start loading while the tour is still a screen and a half away
   const pinEl = $('.pin', pano);
-  tourPin = pinEl; pinEl.dataset.first = plates[0].dataset.tint;
   plates.forEach(p => {
     p.style.backgroundColor = p.dataset.tint;
     const img = $('img', p), done = () => img.classList.add('loaded');
