@@ -305,6 +305,10 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .foot .cols h4 { margin: 0 0 8px; font: inherit; color: var(--chrome); }
 .foot .cols a { display: block; text-decoration: none; opacity: .92; }
 .foot .cols a:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
+.foot .social { margin-top: 36px; display: flex; flex-wrap: wrap; gap: 4px; margin-left: -12px; }
+.foot .social a { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 22px; color: var(--paper); opacity: .92; transition: background-color .2s, opacity .2s; }
+.foot .social a:hover, .foot .social a:focus-visible { opacity: 1; background: #34332a; }
+.foot .social svg { width: 20px; height: 20px; fill: currentColor; }
 .foot .legal { margin-top: 44px; padding-top: 22px; border-top: 1px solid #34332a; font: 400 10.5px/1.7 var(--mono); letter-spacing: .03em; color: #a8a497; }
 
 /* ═══ Narrow screens ═══ */
