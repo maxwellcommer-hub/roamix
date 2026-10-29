@@ -94,12 +94,6 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 }
 @media (min-width: 641px) { .nav .cta a .short { display: none; } }
 
-/* the strip Safari 26 reads its status bar colour from (site.js): iOS only, 12px, solid,
-   at the very top, where the status bar covers it */
-.tintbar { display: none; position: fixed; z-index: 45; left: 0; right: 0; height: 12px; pointer-events: none; }
-.tintbar.top { top: 0; }
-@supports (-webkit-touch-callout: none) { .tintbar { display: block; } }
-
 /* ── Page transitions: going between the home page and the documents, the nav stays put, the
       red header morphs from one page's shape into the other's, and the rest of the page
       gives way and rises in (cross-document View Transitions; browsers without them just
@@ -171,8 +165,7 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .pano .pin { position: sticky; top: 0; height: calc(100vh + 96px); height: calc(100lvh + 96px); overflow: hidden; }
 .pano .strip { display: flex; height: 100%; will-change: transform; }
 .pano .strip.scroll-driven { animation: strip-slide linear both; animation-timeline: scroll(root block); }
-/* the frame is native sticky (it never trails the finger); Safari's band reads the fixed
-   tint strip instead (site.js), so the sticky frame no longer decides its colour */
+/* the frame is native sticky, so it never trails the finger or jumps in height */
 @keyframes strip-slide { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--travel, 0px), 0, 0); } }
 .plate { position: relative; flex: none; height: 100%; aspect-ratio: 1320 / 2868; container-type: inline-size; overflow: hidden; }
 .plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .5s ease; }
