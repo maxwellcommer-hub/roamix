@@ -70,6 +70,10 @@ header, reading column with an "On this page" list, the home footer; `assets/leg
 `python3 tools/build-legal.py --check` proves the visible text matches git HEAD. The 1.0/1.1
 pages at the root are frozen and are not rebuilt.
 
+Before every push run `python3 tools/stamp-assets.py` (after build-legal, which writes
+unstamped links): it tags each asset link with a content hash so a deploy never pairs a new
+page with a cached old script.
+
 ## Licence
 
 The pages and their wording are © 2026 Maxwell Commer — see [LICENSE](LICENSE). The
