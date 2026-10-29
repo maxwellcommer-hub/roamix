@@ -1,0 +1,56 @@
+/*
+  The legal pages, in the home page's system (site.css carries the tokens, nav and footer).
+  A poster header — vermilion ground, the atlas printed in the deep pull, the title cut out
+  in stock — then the document on bare stock: a reading surface, as the app's own Legal
+  screens are. Long documents get a table of contents that follows you down the page.
+*/
+body.legal { background: var(--paper); }
+
+.doc-head { position: relative; overflow: hidden; isolation: isolate; background: var(--verm); color: var(--paper); min-height: min(64vh, 620px); display: flex; align-items: flex-end; padding: 140px var(--gutter) clamp(44px, 7vw, 84px); }
+.doc-head .map { position: absolute; z-index: -1; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; opacity: 0; scale: 1.05; transition: opacity 1s ease, scale 2s var(--ease-settle); }
+.doc-head.in .map { opacity: 1; scale: 1; }
+.doc-head .inner { width: 100%; max-width: 1120px; margin: 0 auto; }
+.doc-head .kicker { margin: 0 0 18px; }
+.doc-head h1 { margin: 0; font: 800 clamp(52px, 10vw, 132px)/0.9 var(--display); letter-spacing: -0.035em; text-wrap: balance; }
+.doc-head .effective { margin: 22px 0 0; font: 400 12px/1.6 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.doc-head .kicker, .doc-head h1, .doc-head .effective { opacity: 0; translate: 0 22px; transition: opacity .6s ease, translate var(--t-appear) var(--ease-appear); }
+.doc-head.in .kicker, .doc-head.in h1, .doc-head.in .effective { opacity: 1; translate: 0 0; }
+.doc-head.in h1 { transition-delay: .08s; } .doc-head.in .effective { transition-delay: .16s; }
+
+/* ── the reading surface ── */
+.doc-wrap { display: grid; grid-template-columns: 200px minmax(0, 720px); justify-content: center; gap: clamp(40px, 6vw, 96px); padding: clamp(56px, 8vw, 96px) var(--gutter) clamp(80px, 10vw, 128px); }
+.doc { min-width: 0; color: var(--ink-soft); font-size: 17.5px; line-height: 1.7; }
+.doc > :first-child { margin-top: 0; }
+.doc p { margin: 0 0 18px; text-wrap: pretty; }
+.doc h2 { margin: 64px 0 16px; color: var(--ink); font: 600 clamp(24px, 3vw, 32px)/1.15 var(--display); letter-spacing: -.012em; text-wrap: balance; scroll-margin-top: 100px; }
+.doc ul { margin: 0 0 20px; padding: 0; list-style: none; }
+.doc li { position: relative; padding-left: 26px; margin: 0 0 14px; }
+.doc li::before { content: ""; position: absolute; left: 6px; top: .68em; width: 7px; height: 7px; border-radius: 50%; background: var(--verm); }
+.doc strong { color: var(--ink); font-weight: 500; }
+.doc a { color: var(--verm-deep); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.doc a:hover { color: var(--verm); }
+/* the short version, first thing on every page: a card, the app's own radius */
+.doc .callout { margin: 0 0 8px; padding: 26px 28px; background: var(--card); border: 1px solid var(--kraft); border-radius: 22px; color: var(--ink); font: 400 clamp(18px, 1.6vw, 20px)/1.6 var(--text); }
+/* the row of sibling documents at the foot of each */
+.doc p.effective { margin-top: 64px !important; padding-top: 24px; border-top: 2px dashed var(--kraft); font: 400 11.5px/2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint) !important; }
+.doc p.effective a { color: var(--ink); text-decoration: none; }
+.doc p.effective a:hover { color: var(--verm-deep); }
+
+/* ── on this page ── */
+.toc { position: sticky; top: 104px; align-self: start; max-height: calc(100vh - 140px); overflow: auto; }
+.toc .mono { margin: 0 0 14px; font-size: 10.5px; color: var(--ink-faint); }
+.toc ol { margin: 0; padding: 0; list-style: none; border-left: 2px solid var(--paper-deep); }
+.toc a { display: block; padding: 7px 0 7px 14px; margin-left: -2px; border-left: 2px solid transparent; color: var(--ink-faint); text-decoration: none; font: 500 13px/1.35 var(--text); transition: color .2s, border-color .2s; }
+.toc a:hover { color: var(--ink); }
+.toc a.on { color: var(--verm-deep); border-left-color: var(--verm); }
+.toc:empty, .toc.none { display: none; }
+
+@media (max-width: 1000px) {
+  .doc-wrap { grid-template-columns: minmax(0, 720px); }
+  .toc { display: none; }
+}
+@media (max-width: 640px) {
+  .doc-head { min-height: 52vh; padding-top: 110px; }
+  .doc { font-size: 16.5px; }
+  .doc .callout { padding: 20px 20px; }
+}

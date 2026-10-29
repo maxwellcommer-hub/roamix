@@ -142,7 +142,9 @@
   // so a move stretches it out and thins it, and it lands round
   const links = $$('.nav .links a'), pick = $('.nav .pick');
   const eL = new Spring(0, .34, .72), eR = new Spring(0, .34, .72);
-  let current = null, placed = false;
+  // a page of its own (the legal pages) marks its link aria-current; the home page's spy
+  // takes over from it wherever there are sections to watch
+  let current = links.find(l => l.getAttribute('aria-current') === 'page') || null, placed = false;
   const drawPick = () => {
     const w = Math.max(0, eR.v - eL.v), rest = Math.max(1, eR.to - eL.to);
     const stretch = Math.max(0, w / rest - 1);
@@ -169,7 +171,9 @@
     a.addEventListener('focus', () => moveTo(a));
   });
   $('.nav .links')?.addEventListener('pointerleave', () => moveTo(current));
-  const sections = links.map(a => $(a.getAttribute('href'))).filter(Boolean);
+  // only links to a section of THIS page are watched (the legal pages link back to the home's)
+  const watched = links.filter(a => a.getAttribute('href').startsWith('#'));
+  const sections = watched.map(a => $(a.getAttribute('href'))).filter(Boolean);
   let spans = [];
   // "How" covers the record section after it too: it's still the how of the app
   const extendsTo = { fills: 'miles' };
@@ -182,8 +186,9 @@
   $('.nav .links')?.addEventListener('pointerenter', () => hovering = true);
   $('.nav .links')?.addEventListener('pointerleave', () => hovering = false);
   const spy = () => {
+    if (!spans.length) return;
     const y = scrollY + innerHeight * .4; let hit = null;
-    spans.forEach(([t, b], i) => { if (t < y && b > y) hit = links[i]; });
+    spans.forEach(([t, b], i) => { if (t < y && b > y) hit = watched[i]; });
     if (hit !== current) { current = hit; if (!hovering) moveTo(current); }
   };
   // ONE scroll handler, run at most once a frame
@@ -254,6 +259,9 @@
     history.replaceState(null, '', href === './' ? location.pathname : href);
   }));
 
+  let sizePano = () => {};
+  // Each section below runs only on a page that has it (the legal pages share this file).
+  if ($('.hero')) {
   // ── Hero: land fades up, the route draws itself, airports stamp down as it reaches them ─
   const hero = $('.hero');
   const route = $('#route'), mask = $('#route-mask'), puck = $('#puck');
@@ -338,6 +346,8 @@
   // fonts can land after load on a slow line; don't hold the page for them
   setTimeout(() => { if (!hero.classList.contains('in')) startHero(); }, 2500);
 
+  }
+  if ($('#tour')) {
   // ── Tour: vertical scroll drives the strip sideways ─────────────────────────────────
   const pano = $('#tour'), strip = $('#strip'), plates = $$('.plate', strip);
   const ticks = $('#ticks'), num = $('#pano-n');
@@ -345,17 +355,24 @@
   const tickEls = $$('i', ticks);
   // measured on resize only; the scroll path is pure arithmetic and one transform write
   let travel = 0, panoTop = 0, plateW = 1, lastOn = -1, lastF = -1;
-  const sizePano = () => {
+  // sized from the pinned frame (100lvh: the full screen, which a phone's address bar showing
+  // and hiding does NOT change) and only re-sized when the WIDTH changes — re-sizing on every
+  // address-bar move is what made the page jump and stutter on a phone
+  const pin = $('.pin', pano);
+  let sizedW = 0;
+  sizePano = (force) => {
+    if (!force && sizedW === innerWidth && travel) return;
+    sizedW = innerWidth;
     plateW = plates[0].offsetWidth || 1;
     travel = Math.max(0, plateW * plates.length - innerWidth);
-    pano.style.height = `${innerHeight + travel}px`;
+    pano.style.height = `${pin.offsetHeight + travel}px`;
     panoTop = pano.getBoundingClientRect().top + scrollY;
     lastF = -1; panoScroll();
   };
   const panoScroll = () => {
     const top = panoTop - scrollY, f = travel ? Math.min(1, Math.max(0, -top / travel)) : 0;
     if (f !== lastF) { strip.style.transform = `translate3d(${-f * travel}px,0,0)`; lastF = f; }
-    nav.classList.toggle('away', top <= 1 && top + innerHeight + travel >= innerHeight - 1);
+    nav.classList.toggle('away', top <= 1 && top + travel >= -1);
     if (top > innerHeight) return;
     const x = f * travel; // strip offset
     const on = Math.min(plates.length - 1, Math.max(0, Math.floor((x + innerWidth / 2) / plateW)));
@@ -366,17 +383,13 @@
     if (on !== lastOn) { tickEls.forEach((t, i) => t.classList.toggle('on', i === on)); num.textContent = String(on + 1).padStart(2, '0'); lastOn = on; }
   };
   onScrollFns.push(panoScroll);
-  addEventListener('resize', sizePano);
-  addEventListener('load', sizePano);
-  $$('img', strip).forEach(img => img.complete || img.addEventListener('load', sizePano, { once: true }));
-  sizePano();
-  layoutNav(); measureSpy();
-  // fonts, images and the rise-ins all move things after load: re-measure whenever the
-  // page's height changes, so the nav never names the wrong section
-  let remeasure = 0;
-  new ResizeObserver(() => { cancelAnimationFrame(remeasure); remeasure = requestAnimationFrame(() => { sizePano(); layoutNav(); measureSpy(); spy(); }); }).observe(document.body);
+  addEventListener('resize', () => sizePano());
+  addEventListener('load', () => sizePano(true));
+  $$('img', strip).forEach(img => img.complete || img.addEventListener('load', () => sizePano(true), { once: true }));
   if (still) plates.forEach(p => p.classList.add('seen'));
 
+  }
+  if ($('#board')) {
   // ── The departures board ────────────────────────────────────────────────────────────
   const CELLS = 9, GL = ' ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const rows = $$('#board .row');
@@ -418,6 +431,8 @@
   }, { threshold: .5 });
   boardIO.observe($('#board'));
 
+  }
+  if ($('#bubbles')) {
   // ── Every mile, counted: the You tab's tiles, alive. Each one floats a few points round
   //    its spot (same-ink tiles fuse where they drift together); grab one and it lifts off
   //    the sheet onto its own layer — free to go anywhere on the screen — while the others
@@ -512,9 +527,16 @@
     const r = field.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     return B.find(b => { if (b.away) return false; const q = box(b); return x > q.x && x < q.x + q.w && y > q.y && y < q.y + q.h; });
   };
+  // mouse: a press picks the tile up. touch: it waits to see which way the finger goes —
+  // up or down is the page scrolling (the browser keeps it), sideways picks the tile up
+  let pending = null;
   field.addEventListener('pointerdown', e => {
     const b = tileAt(e); if (!b || home) return;
-    e.preventDefault(); field.setPointerCapture(e.pointerId);
+    if (e.pointerType === 'touch') { pending = { b, x: e.clientX, y: e.clientY, id: e.pointerId }; return; }
+    e.preventDefault(); startLift(b, e);
+  });
+  const startLift = (b, e) => {
+    try { field.setPointerCapture(e.pointerId); } catch (_) {}
     const r = field.getBoundingClientRect(), q = box(b);
     held = b; home = { b }; b.away = true; b.lab.style.visibility = 'hidden';
     Object.assign(lift.style, { display: 'grid', width: q.w + 'px', height: q.h + 'px', borderRadius: q.r + 'px', background: INK[b.ink][0], color: INK[b.ink][1] });
@@ -522,12 +544,17 @@
     sx.v = sx.to = r.left + q.x; sy.v = sy.to = r.top + q.y; sx.vel = sy.vel = 0;
     gx = e.clientX - sx.v; gy = e.clientY - sy.v;
     sc.to = still ? 1 : 1.06; drawLift(); wake(tick);
-  });
+  };
   field.addEventListener('pointermove', e => {
+    if (pending && !held) {
+      const dx = e.clientX - pending.x, dy = e.clientY - pending.y;
+      if (Math.abs(dx) > 8 && Math.abs(dx) > Math.abs(dy) * 1.2) { const b = pending.b; pending = null; startLift(b, { clientX: e.clientX - dx, clientY: e.clientY - dy, pointerId: e.pointerId }); }
+      else if (Math.abs(dy) > 8) pending = null;
+    }
     if (!held) return;
     sx.v = sx.to = e.clientX - gx; sy.v = sy.to = e.clientY - gy; drawLift();
   });
-  const drop = () => { if (!held) return; held = null; sc.to = 1; if (still) { sx.snap(); sy.snap(); } wake(tick); };
+  const drop = () => { pending = null; if (!held) return; held = null; sc.to = 1; if (still) { sx.snap(); sy.snap(); } wake(tick); };
   field.addEventListener('pointerup', drop); field.addEventListener('pointercancel', drop);
 
   // the numbers roll up when the cluster first comes into view (RollingNumber, roughly)
@@ -547,4 +574,11 @@
   };
   const rollIO = new IntersectionObserver(es => { if (es[0].isIntersecting) { rollIO.disconnect(); rollNumbers(); } });
   rollIO.observe(field);
+  }
+  // fonts, images and the rise-ins all move things after load: re-measure whenever the
+  // page's height changes, so the nav never names the wrong section
+  sizePano(true); layoutNav(); measureSpy();
+  if (current) requestAnimationFrame(() => moveTo(current));
+  let remeasure = 0;
+  new ResizeObserver(() => { cancelAnimationFrame(remeasure); remeasure = requestAnimationFrame(() => { sizePano(); layoutNav(); measureSpy(); spy(); }); }).observe(document.body);
 })();
