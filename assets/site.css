@@ -57,7 +57,7 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 
 /* ═══ Nav — one bar at the top; pinches into pills as you scroll ═══ */
 .nav { position: fixed; z-index: 50; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 50%; translate: -50% 0; width: min(760px, calc(100% - 24px)); height: 56px; transition: translate var(--t-settle) var(--ease-settle); }
-.nav.away { translate: -50% -90px; }
+.nav.away { translate: -50% calc(-100% - env(safe-area-inset-top, 0px) - 30px); }
 .nav canvas.goo { inset: 0; width: 100%; height: 100%; filter: brightness(.088); transition: filter .25s ease; }
 .nav.onink canvas.goo { filter: none; }
 .nav .row { position: absolute; inset: 0; display: flex; align-items: stretch; gap: 18px; }
@@ -93,6 +93,9 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
   .nav .cta a .long { display: none; }
 }
 @media (min-width: 641px) { .nav .cta a .short { display: none; } }
+
+/* the strip Safari 26 reads its top band's colour from (site.js) */
+.tintbar { position: fixed; z-index: 1; top: 0; left: 0; right: 0; height: 2px; pointer-events: none; background: #E8401E; }
 
 /* ── Page transitions: going between the home page and the documents, the nav stays put, the
       red header morphs from one page's shape into the other's, and the rest of the page
