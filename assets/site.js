@@ -309,6 +309,21 @@
     addEventListener('scroll', () => { if (!running) target = cur = scrollY; }, { passive: true });
   }
 
+  // touch screens: going to another page of the site, fade this one out first (site.css)
+  if (matchMedia('(hover: none) and (pointer: coarse)').matches && !still) {
+    document.addEventListener('click', e => {
+      const a = e.target.closest('a[href]');
+      if (!a || e.defaultPrevented || a.target || e.metaKey || e.ctrlKey) return;
+      const url = new URL(a.href, location.href);
+      if (url.origin !== location.origin || (url.pathname === location.pathname && url.hash)) return;
+      e.preventDefault();
+      document.body.classList.add('leaving');
+      setTimeout(() => { location.href = url.href; }, 170);
+    });
+    // coming back with the back button restores the faded page from cache: show it again
+    addEventListener('pageshow', e => { if (e.persisted) document.body.classList.remove('leaving'); });
+  }
+
   let sizePano = () => {};
   // Each section below runs only on a page that has it (the legal pages share this file).
   if ($('.hero')) {
@@ -405,14 +420,21 @@
   // each plate shows its own ink until its picture arrives, and the picture fades in over it;
   // the pictures start loading while the tour is still a screen and a half away
   const pinEl = $('.pin', pano);
-  plates.forEach(p => {
-    p.style.backgroundColor = p.dataset.tint;
-    const img = $('img', p), done = () => img.classList.add('loaded');
-    img.complete && img.naturalWidth ? done() : img.addEventListener('load', done, { once: true });
-  });
+  // A picture only fades in once it is DECODED, not just downloaded: Safari otherwise decodes
+  // it on first paint, mid-scroll, and it pops. All ten start as soon as the page is idle.
+  plates.forEach(p => { p.style.backgroundColor = p.dataset.tint; });
+  const ready = img => {
+    if (img.dataset.ready) return; img.dataset.ready = '1';
+    img.loading = 'eager';
+    const show = () => img.classList.add('loaded');
+    const decode = () => (img.decode ? img.decode().then(show, show) : show());
+    img.complete && img.naturalWidth ? decode() : img.addEventListener('load', decode, { once: true });
+  };
+  const warm = () => plates.forEach(p => ready($('img', p)));
+  (window.requestIdleCallback || (f => setTimeout(f, 600)))(warm);
   const early = new IntersectionObserver(es => {
     if (!es[0].isIntersecting) return;
-    early.disconnect(); plates.forEach(p => { $('img', p).loading = 'eager'; });
+    early.disconnect(); warm();
   }, { rootMargin: '150% 0px 150% 0px' });
   early.observe(pano);
   const tickEls = $$('i', ticks);

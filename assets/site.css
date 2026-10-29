@@ -112,6 +112,17 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 @keyframes vt-in { from { opacity: 0; } }
 @keyframes vt-rise { from { opacity: 0; transform: translateY(28px); } }
 @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+/* Safari 26 treats the transition's full-screen snapshot layer as a fixed element at the
+   screen edges and paints its toolbar for the length of it (a red bar that then vanishes),
+   so touch screens skip the View Transition: the page fades out on tap (site.js) and the
+   next one fades in, with no overlay layer for Safari to sample */
+@media (hover: none) and (pointer: coarse) {
+  @view-transition { navigation: none; }
+  body { animation: page-in .55s var(--ease-appear) both; }
+  body.leaving { opacity: 0; transition: opacity .18s ease; }
+}
+@keyframes page-in { from { opacity: 0; } }   /* opacity only: a transform on body would unpin the nav */
+@media (prefers-reduced-motion: reduce) { body { animation: none !important; } }
 
 /* ═══ Hero — the atlas, vermilion ground, land in the deep pull ═══ */
 .hero { position: relative; min-height: max(100vh, 640px); min-height: max(100lvh, 640px); display: grid; place-items: end center; overflow: hidden; background: var(--verm); color: var(--paper); isolation: isolate; }
@@ -168,7 +179,7 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 /* the frame is native sticky, so it never trails the finger or jumps in height */
 @keyframes strip-slide { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--travel, 0px), 0, 0); } }
 .plate { position: relative; flex: none; height: 100%; aspect-ratio: 1320 / 2868; container-type: inline-size; overflow: hidden; }
-.plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .5s ease; }
+.plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .7s ease; }
 .plate img.loaded { opacity: 1; }
 .plate .copy { position: absolute; left: 7.65cqw; right: 6cqw; top: 11.1cqw; }
 .plate h3 { margin: 0; font: 800 14.4cqw/0.93 var(--display); letter-spacing: -0.035em; }
