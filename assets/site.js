@@ -126,13 +126,18 @@
     else paintGoo(navCv, (x, y) => { const a = sdBox(x, y, bar), b = U(x, y); return a + (b - a) * t; }, INKS.paper, 2);
   };
   const navTick = dt => { const a = navSplit.step(dt); paintNav(); return a; };
-  let footTop = Infinity;
+  // The flip to stock is decided from where the footer IS, read live each time, against the
+  // nav's own middle, never from a footer offset cached at load: fonts, images, the tour's
+  // pin and the legal pages' contents all move the footer after that, and a stale number
+  // left the nav black over the black footer (or stock over the page) until the next resize.
+  let navMid = 42;
   const onScrollNav = () => {
     const split = scrollY > 40 ? 1 : 0;
     if (navSplit.to !== split) { navSplit.to = split; still ? (navSplit.snap(), paintNav()) : wake(navTick); }
-    nav.classList.toggle('onink', scrollY + 40 > footTop);
+    nav.classList.toggle('onink', !!foot && foot.getBoundingClientRect().top < navMid);
   };
-  const layoutNav = () => { measureNav(); footTop = foot.getBoundingClientRect().top + scrollY; paintNav(); };
+  const layoutNav = () => { measureNav(); navMid = parseFloat(getComputedStyle(nav).top) + nav.offsetHeight / 2; paintNav(); onScrollNav(); };
+  new ResizeObserver(() => onScrollNav()).observe(document.body);
   addEventListener('resize', layoutNav);
   navSplit.to = navSplit.v = scrollY > 40 ? 1 : 0;
   layoutNav(); onScrollNav();
