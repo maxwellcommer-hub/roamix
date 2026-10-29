@@ -18,7 +18,7 @@ body.legal { background: var(--paper); }
 .doc-head.in h1 { transition-delay: .08s; } .doc-head.in .effective { transition-delay: .16s; }
 
 /* ── the reading surface ── */
-.doc-wrap { display: grid; grid-template-columns: 200px minmax(0, 720px); justify-content: center; gap: clamp(40px, 6vw, 96px); padding: clamp(56px, 8vw, 96px) var(--gutter) clamp(80px, 10vw, 128px); }
+.doc-wrap { background: var(--paper); display: grid; grid-template-columns: 200px minmax(0, 720px); justify-content: center; gap: clamp(40px, 6vw, 96px); padding: clamp(56px, 8vw, 96px) var(--gutter) clamp(80px, 10vw, 128px); }
 .doc { min-width: 0; color: var(--ink-soft); font-size: 17.5px; line-height: 1.7; }
 .doc > :first-child { margin-top: 0; }
 .doc p { margin: 0 0 18px; text-wrap: pretty; }
