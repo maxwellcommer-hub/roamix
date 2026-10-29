@@ -205,7 +205,7 @@
   // the band where nobody sees it, wearing the live colour.
   const tintBar = document.createElement('div'); tintBar.className = 'tintbar'; tintBar.setAttribute('aria-hidden', 'true');
   document.body.prepend(tintBar);
-  let tintSpans = [], tintNow = '', plateTint = null;
+  let tintSpans = [], tintNow = '', plateTint = null, tourPin = null;
   const measureTint = () => { tintSpans = $$('[data-tint]').filter(el => !el.classList.contains('plate')).map(el => { const r = el.getBoundingClientRect(); return [r.top + scrollY, r.bottom + scrollY, el.dataset.tint]; }); };
   const tint = () => {
     if (!themeMeta) return;
@@ -216,6 +216,13 @@
       // Safari 26 prefers a fixed/sticky element touching the top (the tour's pinned frame)
       // and then the page background over theme-color, so both carry the colour too
       document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c; tintBar.style.backgroundColor = c;
+    }
+    // The tour's frame is sticky (native, so it never trails the finger). Safari extends a
+    // sticky element's own colour into a band at the screen edge it nears, so the frame wears
+    // the colour of the plate at that edge: the band reads as more of the plate.
+    if (tourPin) {
+      const pc = (plateTint && plateTint()) || tourPin.dataset.first;
+      if (pc && tourPin.dataset.cur !== pc) { tourPin.style.backgroundColor = pc; tourPin.dataset.cur = pc; }
     }
   };
   measureTint(); addEventListener('load', measureTint);
@@ -410,6 +417,7 @@
   // each plate shows its own ink until its picture arrives, and the picture fades in over it;
   // the pictures start loading while the tour is still a screen and a half away
   const pinEl = $('.pin', pano);
+  tourPin = pinEl; pinEl.dataset.first = plates[0].dataset.tint;
   plates.forEach(p => {
     p.style.backgroundColor = p.dataset.tint;
     const img = $('img', p), done = () => img.classList.add('loaded');
@@ -437,8 +445,7 @@
     strip.style.setProperty('--travel', `${-travel}px`);
     panoTop = pano.getBoundingClientRect().top + scrollY;
     if (cssDriven) {
-      strip.style.animationRange = pin.style.animationRange = `${panoTop}px ${panoTop + travel}px`;
-      pin.style.setProperty('--hold', `${travel}px`);
+      strip.style.animationRange = `${panoTop}px ${panoTop + travel}px`;
     }
     lastF = -1; panoScroll();
   };
@@ -446,7 +453,7 @@
   // compositor in lockstep with the finger — a JS transform written after each scroll event
   // trails the touch on a phone and judders. JS only keeps the ticks and labels.
   const cssDriven = CSS.supports('animation-timeline: scroll()') && !still;
-  if (cssDriven) { strip.classList.add('scroll-driven'); pano.classList.add('scroll-driven'); }
+  if (cssDriven) strip.classList.add('scroll-driven');
   const panoScroll = () => {
     const top = panoTop - scrollY, f = travel ? Math.min(1, Math.max(0, -top / travel)) : 0;
     if (!cssDriven && f !== lastF) { strip.style.transform = `translate3d(${-f * travel}px,0,0)`; lastF = f; }
