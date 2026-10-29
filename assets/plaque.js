@@ -126,7 +126,10 @@
     gl.enable(gl.DEPTH_TEST); gl.useProgram(prog);
     const asp = w / h, fov = .5;
     // fit the plaque's diagonal in view at any aspect
-    const R = Math.hypot(W, H) / 2, dist = R / Math.tan(fov / 2) * (asp < 1 ? .95 / asp : .86);
+    // fit the model's whole bounding sphere (footprint plus height) inside the canvas, so no
+    // angle can turn a corner past its edge; the canvas is 160% of its box, so on screen the
+    // plaque is still drawn at the size of the box
+    const R = Math.hypot(W / 2, H / 2, 10), dist = R / Math.sin(fov / 2) * (asp < 1 ? 1.12 / asp : 1.12);
     const view = mul(trans(0, 4, -dist), mul(rotX(-cam.pitch), rotZ(cam.yaw)));
     const proj = persp(fov, asp, dist * .3, dist * 3);
     const mvp = mul(proj, view);
@@ -144,15 +147,15 @@
   };
   const kick = () => { if (!raf) raf = requestAnimationFrame(draw); };
 
-  cv.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; cv.setPointerCapture(e.pointerId); host.classList.add('grab'); kick(); });
-  cv.addEventListener('pointermove', e => {
+  host.addEventListener('pointerdown', e => { dragging = true; lx = e.clientX; ly = e.clientY; host.setPointerCapture(e.pointerId); host.classList.add('grab'); kick(); });
+  host.addEventListener('pointermove', e => {
     if (!dragging) return;
     cam.yaw += (e.clientX - lx) * .008; cam.pitch = clamp(cam.pitch - (e.clientY - ly) * .006, .25, 1.35);
     cam.yaw = clamp(cam.yaw, home.yaw - 1.1, home.yaw + 1.1);
     lx = e.clientX; ly = e.clientY; kick();
   });
   const release = () => { dragging = false; cam.vy = cam.vp = 0; host.classList.remove('grab'); kick(); };
-  cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
+  host.addEventListener('pointerup', release); host.addEventListener('pointercancel', release);
   addEventListener('resize', kick);
 
   // load only as the section comes near
