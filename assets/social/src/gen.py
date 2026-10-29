@@ -30,7 +30,7 @@ def avatar(size, scale):
     x=14.5+gw/2-vw/2; y=14+gh/2-vh/2
     return page(size,size,f'<svg class=a style="inset:0" width={size} height={size} viewBox="{x:.2f} {y:.2f} {vw:.2f} {vh:.2f}" fill="{C}"><use href="#globe"/></svg>')
 
-def banner(w,h,safe,wmw,tag,tagsize,atlas):
+def banner(w,h,safe,wmw,tag,tagsize,atlas,plain=False):
     # atlas: (x,y,width) of world map in px; safe: (x,y,w,h) where type lives
     ax,ay,aw=atlas
     sx,sy,sw,sh=safe
@@ -41,7 +41,7 @@ def banner(w,h,safe,wmw,tag,tagsize,atlas):
       <svg width={wmw} viewBox="0 0 247.43 108.6" style="display:block;fill:{C};margin:-{wmw*0.08}px 0" ><use href="#wm"/></svg>
       <div style="font:{tagsize}px/1 M;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap">{tag}</div>
     </div>'''
-    return page(w,h,body)
+    return page(w,h,arc if plain else body)
 
 TAG='Fly back through any trip&nbsp;&nbsp;·&nbsp;&nbsp;No servers&nbsp;&nbsp;·&nbsp;&nbsp;No tracking'
 out={}
@@ -55,3 +55,7 @@ out['facebook-cover']=(banner(1640,720,(180,48,1280,624),640,TAG,20,(-40,-170,17
 for k,(html,w,h) in out.items():
     open(f'{S}/{k}.html','w').write(html)
     print(k,w,h)
+
+out2={'x-header-plain':(banner(1500,500,(330,60,1110,330),560,TAG,19,(-60,-150,1620),True),1500,500),
+      'facebook-cover-plain':(banner(1640,720,(180,48,1280,624),640,TAG,20,(-40,-170,1720),True),1640,720)}
+for k,(html,w,h) in out2.items(): open(f'{S}/{k}.html','w').write(html)
