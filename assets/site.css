@@ -94,11 +94,10 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 }
 @media (min-width: 641px) { .nav .cta a .short { display: none; } }
 
-/* the strips Safari 26 reads its status bar and toolbar colours from (site.js): iOS only,
-   12px, solid, at the very edges, where the bars cover them */
+/* the strip Safari 26 reads its status bar colour from (site.js): iOS only, 12px, solid,
+   at the very top, where the status bar covers it */
 .tintbar { display: none; position: fixed; z-index: 45; left: 0; right: 0; height: 12px; pointer-events: none; }
 .tintbar.top { top: 0; }
-.tintbar.bottom { bottom: -6px; }
 @supports (-webkit-touch-callout: none) { .tintbar { display: block; } }
 
 /* ── Page transitions: going between the home page and the documents, the nav stays put, the
