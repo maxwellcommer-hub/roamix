@@ -200,6 +200,11 @@
   // the tour, whichever plate) sits at the top of the screen — and the band reads as the
   // page running on up to the edge.
   const themeMeta = document.querySelector('meta[name="theme-color"]');
+  // Safari 26 ignores theme-color: its top band takes the colour of a fixed element touching
+  // the top edge (else a sample of the page's top). So a thin fixed strip sits there, under
+  // the band where nobody sees it, wearing the live colour.
+  const tintBar = document.createElement('div'); tintBar.className = 'tintbar'; tintBar.setAttribute('aria-hidden', 'true');
+  document.body.prepend(tintBar);
   let tintSpans = [], tintNow = '', plateTint = null;
   const measureTint = () => { tintSpans = $$('[data-tint]').filter(el => !el.classList.contains('plate')).map(el => { const r = el.getBoundingClientRect(); return [r.top + scrollY, r.bottom + scrollY, el.dataset.tint]; }); };
   const tint = () => {
@@ -210,7 +215,7 @@
       themeMeta.setAttribute('content', c); tintNow = c;
       // Safari 26 prefers a fixed/sticky element touching the top (the tour's pinned frame)
       // and then the page background over theme-color, so both carry the colour too
-      document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c;
+      document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c; tintBar.style.backgroundColor = c;
     }
   };
   measureTint(); addEventListener('load', measureTint);
@@ -460,7 +465,7 @@
     const top = panoTop - scrollY;
     if (top > 0 || top + travel < 0) return null;            // the strip isn't pinned
     const x = Math.min(1, Math.max(0, -top / (travel || 1))) * travel;
-    return plates[Math.min(plates.length - 1, Math.floor(x / plateW))].dataset.tint;
+    return plates[Math.min(plates.length - 1, Math.floor((x + innerWidth / 2) / plateW))].dataset.tint;
   };
   addEventListener('resize', () => sizePano());
   addEventListener('load', () => sizePano(true));
