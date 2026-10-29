@@ -11,9 +11,6 @@
   };
   const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-  // the blurred edges under Safari's bars (styled in site.css; shown on touch screens only)
-  ['bottom'].forEach(side => { const d = document.createElement('div'); d.className = 'edge ' + side; d.setAttribute('aria-hidden', 'true'); d.innerHTML = '<i></i><i></i><i></i>'; document.body.append(d); });
-
   // ── Reveal on view: .rise and anything that stamps in ──────────────────────────────
   const io = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
@@ -206,7 +203,13 @@
     if (!themeMeta) return;
     let c = plateTint ? plateTint() : null;
     if (!c) { const y = scrollY + 1; for (const [t, b, col] of tintSpans) if (t <= y && b > y) { c = col; break; } }
-    if (c && c !== tintNow) { themeMeta.setAttribute('content', c); tintNow = c; }
+    if (c && c !== tintNow) {
+      themeMeta.setAttribute('content', c); tintNow = c;
+      // Safari 26 prefers a fixed/sticky element touching the top (the tour's pinned frame)
+      // and then the page background over theme-color, so both carry the colour too
+      document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c;
+      const pinEl = document.querySelector('.pano .pin'); if (pinEl) pinEl.style.backgroundColor = c;
+    }
   };
   measureTint(); addEventListener('load', measureTint);
 
@@ -385,12 +388,19 @@
     plateW = plates[0].offsetWidth || 1;
     travel = Math.max(0, plateW * plates.length - innerWidth);
     pano.style.height = `${pin.offsetHeight + travel}px`;
+    strip.style.setProperty('--travel', `${-travel}px`);
     panoTop = pano.getBoundingClientRect().top + scrollY;
+    if (cssDriven) strip.style.animationRange = `${panoTop}px ${panoTop + travel}px`;
     lastF = -1; panoScroll();
   };
+  // Where the browser can, the strip is a scroll-driven CSS animation, so it moves on the
+  // compositor in lockstep with the finger — a JS transform written after each scroll event
+  // trails the touch on a phone and judders. JS only keeps the ticks and labels.
+  const cssDriven = CSS.supports('animation-timeline: scroll()') && !still;
+  if (cssDriven) strip.classList.add('scroll-driven');
   const panoScroll = () => {
     const top = panoTop - scrollY, f = travel ? Math.min(1, Math.max(0, -top / travel)) : 0;
-    if (f !== lastF) { strip.style.transform = `translate3d(${-f * travel}px,0,0)`; lastF = f; }
+    if (!cssDriven && f !== lastF) { strip.style.transform = `translate3d(${-f * travel}px,0,0)`; lastF = f; }
     nav.classList.toggle('away', top <= 1 && top + travel >= -1);
     if (top > innerHeight) return;
     const x = f * travel; // strip offset
