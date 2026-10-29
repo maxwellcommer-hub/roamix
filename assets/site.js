@@ -202,10 +202,10 @@
   const themeMeta = document.querySelector('meta[name="theme-color"]');
   // Safari 26 ignores theme-color. It colours its status bar and toolbar from a fixed/sticky
   // element at each edge (within ~4px of the top / 3px of the bottom, 80%+ wide, 3px+ tall),
-  // and only re-reads a strip's colour when the strip APPEARS. So: a 12px solid strip at each
-  // edge (iOS only, site.css), re-inserted whenever its colour changes.
+  // and only re-reads a strip's colour when the strip APPEARS. So: a 12px solid strip at the
+  // top edge (iOS only, site.css), re-inserted whenever its colour changes.
   const strip = side => { const d = document.createElement('div'); d.className = 'tintbar ' + side; d.setAttribute('aria-hidden', 'true'); return d; };
-  const bars = { top: strip('top'), bottom: strip('bottom') }, barColour = { top: '', bottom: '' };
+  const bars = { top: strip('top') }, barColour = { top: '' };
   const setBar = (side, c) => {
     if (!c || barColour[side] === c) return;
     barColour[side] = c;
@@ -218,12 +218,12 @@
   const tint = () => {
     if (!themeMeta) return;
     const tourC = plateTint ? plateTint() : null;
-    const top = tourC || colourAt(scrollY + 1), bottom = tourC || colourAt(scrollY + innerHeight - 2) || top;
+    const top = tourC || colourAt(scrollY + 1);
     if (top && top !== tintNow) {
       themeMeta.setAttribute('content', top); tintNow = top;
       document.documentElement.style.backgroundColor = top; document.body.style.backgroundColor = top;
     }
-    setBar('top', top); setBar('bottom', bottom);
+    setBar('top', top);
     // The tour's frame is sticky (native, so it never trails the finger), and Safari reads a
     // sticky element's own colour too: it wears the colour of the plate under the middle.
     if (tourPin) {
