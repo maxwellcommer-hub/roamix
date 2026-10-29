@@ -12,7 +12,7 @@
   const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
   // the blurred edges under Safari's bars (styled in site.css; shown on touch screens only)
-  ['top', 'bottom'].forEach(side => { const d = document.createElement('div'); d.className = 'edge ' + side; d.setAttribute('aria-hidden', 'true'); d.innerHTML = '<i></i><i></i><i></i>'; document.body.append(d); });
+  ['bottom'].forEach(side => { const d = document.createElement('div'); d.className = 'edge ' + side; d.setAttribute('aria-hidden', 'true'); d.innerHTML = '<i></i><i></i><i></i>'; document.body.append(d); });
 
   // ── Reveal on view: .rise and anything that stamps in ──────────────────────────────
   const io = new IntersectionObserver(es => es.forEach(e => {
@@ -194,8 +194,24 @@
     spans.forEach(([t, b], i) => { if (t < y && b > y) hit = watched[i]; });
     if (hit !== current) { current = hit; if (!hovering) moveTo(current); }
   };
+  // ── The browser's own bar takes the colour of what's under it ──────────────────────────
+  // A Safari tab never draws the page under the status bar: it paints that band itself, from
+  // theme-color. So theme-color follows the page — the ground of whatever section (or, in
+  // the tour, whichever plate) sits at the top of the screen — and the band reads as the
+  // page running on up to the edge.
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  let tintSpans = [], tintNow = '', plateTint = null;
+  const measureTint = () => { tintSpans = $$('[data-tint]').filter(el => !el.classList.contains('plate')).map(el => { const r = el.getBoundingClientRect(); return [r.top + scrollY, r.bottom + scrollY, el.dataset.tint]; }); };
+  const tint = () => {
+    if (!themeMeta) return;
+    let c = plateTint ? plateTint() : null;
+    if (!c) { const y = scrollY + 1; for (const [t, b, col] of tintSpans) if (t <= y && b > y) { c = col; break; } }
+    if (c && c !== tintNow) { themeMeta.setAttribute('content', c); tintNow = c; }
+  };
+  measureTint(); addEventListener('load', measureTint);
+
   // ONE scroll handler, run at most once a frame
-  const onScrollFns = [onScrollNav, spy];
+  const onScrollFns = [onScrollNav, spy, tint];
   let scrollQueued = false;
   addEventListener('scroll', () => {
     if (scrollQueued) return; scrollQueued = true;
@@ -386,6 +402,12 @@
     if (on !== lastOn) { tickEls.forEach((t, i) => t.classList.toggle('on', i === on)); num.textContent = String(on + 1).padStart(2, '0'); lastOn = on; }
   };
   onScrollFns.push(panoScroll);
+  plateTint = () => {
+    const top = panoTop - scrollY;
+    if (top > 0 || top + travel < 0) return null;            // the strip isn't pinned
+    const x = Math.min(1, Math.max(0, -top / (travel || 1))) * travel;
+    return plates[Math.min(plates.length - 1, Math.floor(x / plateW))].dataset.tint;
+  };
   addEventListener('resize', () => sizePano());
   addEventListener('load', () => sizePano(true));
   $$('img', strip).forEach(img => img.complete || img.addEventListener('load', () => sizePano(true), { once: true }));
@@ -583,5 +605,5 @@
   sizePano(true); layoutNav(); measureSpy();
   if (current) requestAnimationFrame(() => moveTo(current));
   let remeasure = 0;
-  new ResizeObserver(() => { cancelAnimationFrame(remeasure); remeasure = requestAnimationFrame(() => { sizePano(); layoutNav(); measureSpy(); spy(); }); }).observe(document.body);
+  new ResizeObserver(() => { cancelAnimationFrame(remeasure); remeasure = requestAnimationFrame(() => { sizePano(); layoutNav(); measureSpy(); spy(); measureTint(); tint(); }); }).observe(document.body);
 })();

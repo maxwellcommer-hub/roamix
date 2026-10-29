@@ -11,6 +11,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
+<meta name="theme-color" content="#E8401E">
 <title>Roamix</title>
 <meta name="description" content="Roamix turns the trips your iPhone already logged into one map you can replay — a flythrough of every route, a page for every trip, and your year issued as a ticket. No account, no ads, no tracking — your library stays on your iPhone and in your own iCloud.">
 <meta property="og:title" content="Roamix — Every trip. One map.">
@@ -23,7 +24,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='12%2012%2048%2048'%3E%3Cpath%20fill='%23E8401E'%20d='M57.11,25.15l-.99-1.73c-1.12-1.8-2.5-3.35-4.11-4.74-3.84-3.31-8.52-5.34-13.55-5.97-4.4-.56-8.78.08-12.78,1.97l-2.3,1.23c-1.28.78-2.42,1.64-3.49,2.59-8.49,7.48-10.27,20.06-4.14,29.57,7.02,10.9,22.33,14.48,33.37,7.61,4-2.49,7.09-6.15,8.93-10.47,2.77-6.53,2.42-13.85-.93-20.06ZM52.94,25.46c1.67,2.8,2.64,5.88,2.95,9.13.11,1.2.09,2.32-.07,3.63-2.46-.96-4.91-1.83-7.44-2.62.63-3.18.87-6.32.71-9.51-.1-2.07-.43-4.01-1.1-6,2.05,1.45,3.66,3.25,4.95,5.36ZM35.64,22.08c.86-1.41,1.74-2.7,2.88-3.87,1.01-1.03,2.44-2.05,3.37-.9.48.59.74,1.29.93,2.04.41,1.7.54,3.38.53,5.15-.03,3.11-.4,6.12-1.05,9.32l-10.65-2.91c1.08-3.11,2.35-6.03,3.98-8.83ZM20.31,23.71c1.86-2.33,4.13-4.2,6.78-5.57,2.07-1.05,4.22-1.73,6.6-1.94-1.38,1.24-2.55,2.55-3.6,4.07-1.94,2.81-3.43,5.83-4.56,9.1-2.54-.59-5.04-1.09-7.75-1.52.64-1.54,1.5-2.87,2.53-4.15ZM16.4,32.63l7.77,1.4c-.64,3.06-1.02,6.1-.93,9.35-1.99-.3-3.89-.65-5.92-.85-1.1-3.18-1.42-6.51-.92-9.9ZM20.03,47.58l3.64.53c.23,1.32.53,2.52.99,3.79-1.78-1.19-3.3-2.58-4.63-4.31ZM34.07,52.8c-.52.7-1.2,1.28-1.97,1.72-.75.39-1.52.27-1.98-.39-.38-.45-.57-1.01-.74-1.58-.3-1.07-.44-2.12-.51-3.32l6.55,1.76-1.35,1.81ZM37.65,47c-2.88-.87-5.71-1.64-8.67-2.35.23-3.1.69-6.13,1.41-9.23l10.71,2.91c-.93,2.97-2.03,5.81-3.45,8.67ZM37.69,55.45c1.01-.91,1.92-1.76,2.77-2.77l3.37,1.4c-1.99.83-3.99,1.23-6.14,1.37ZM48.81,51.07l-5.59-2.23c1.69-2.72,2.92-5.54,3.95-8.54l7.42,2.73c-1.26,3.08-3.13,5.79-5.77,8.04Z'/%3E%3C/svg%3E">
 <link rel="preload" href="fonts/BricolageGrotesque-ExtraBold.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="fonts/MartianMono-Regular.ttf" as="font" type="font/ttf" crossorigin>
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=6624b89e">
 </head>
 <body>
 
@@ -60,7 +61,7 @@
 <main>
 
 <!-- ═══ The atlas ═══ -->
-<header class="hero" id="top">
+<header class="hero" id="top" data-tint="#E8401E">
   <img class="map" src="assets/world.svg" alt="" width="2000" height="1173" fetchpriority="high">
   <svg class="routes" viewBox="0 0 2000 1173" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs><mask id="draw" maskUnits="userSpaceOnUse"><path class="route-mask" id="route-mask" d="M318.9,490.3 327.0,490.7 335.0,491.2 343.0,491.9 351.0,492.7 359.0,493.7 366.9,494.8 374.8,496.0 382.7,497.4 388.0,489.8 393.4,482.2 399.1,474.6 405.0,466.9 411.1,459.1 417.4,451.3 424.0,443.4 430.8,435.5 437.9,427.6 445.3,419.6 453.0,411.6 461.0,403.6 469.4,395.7 478.1,387.7 487.2,379.8 496.7,371.9 506.5,364.2 516.8,356.5 527.6,349.0 538.7,341.7 550.4,334.6 562.5,327.7 575.0,321.1 588.0,314.9 601.5,309.1 615.4,303.7 629.7,298.8 644.4,294.4 659.4,290.7 674.7,287.5 690.3,285.0 706.1,283.2 722.0,282.1 738.0,281.7 753.9,282.1 769.9,283.2 785.6,285.0 801.2,287.5 816.5,290.7 831.6,294.5 846.3,298.8 860.6,303.7 874.4,309.1 884.4,319.0 893.8,328.9 902.7,338.7 911.2,348.4 919.2,358.1 926.7,367.7 934.0,377.2 940.8,386.6 947.3,395.9 953.6,405.1 959.5,414.2 965.2,423.1 962.9,437.9 960.8,452.3 958.9,466.2 957.0,479.6 955.3,492.7 953.7,505.3 952.1,517.7 950.7,529.7 949.3,541.5 954.6,532.0 960.2,522.4 966.0,512.7 972.0,502.9 978.3,492.9 984.9,482.8 991.8,472.6 999.0,462.2 1006.6,451.7 1014.6,441.1 1023.1,430.4 1032.0,419.6 1041.4,408.7 1051.3,397.7 1061.8,386.7 1073.0,375.6 1084.9,364.6 1097.4,353.7 1110.8,342.9 1124.9,332.3 1139.9,322.0 1155.8,312.1 1172.5,302.6 1190.2,293.8 1208.7,285.7 1228.0,278.4 1248.1,272.2 1268.9,267.0 1290.3,263.1 1312.1,260.5 1334.1,259.3 1356.1,259.4 1378.1,261.0 1399.7,264.0 1421.0,268.3 1441.6,273.7 1461.5,280.2 1480.6,287.7 1498.9,296.0 1516.4,305.1 1532.9,314.6 1548.5,324.7 1563.3,335.0 1577.2,345.7 1590.3,356.5 1602.7,367.5 1614.4,378.5 1625.4,389.5 1635.7,400.6 1645.5,411.5 1654.8,422.4 1663.6,433.2 1671.9,443.9 1679.8,454.5 1687.3,465.0 1694.4,475.3 1701.3,485.5 1707.8,495.6 1714.0,505.5 1720.0,515.3 1725.7,525.0 1731.2,534.5 1736.5,543.9 1741.6,553.3 1746.5,562.4 1751.3,571.5"/></mask></defs>
@@ -89,43 +90,43 @@
 <section class="pano" id="tour" aria-label="A tour of Roamix">
   <div class="pin">
     <div class="strip" id="strip">
-      <article class="plate light" data-i="0" aria-label="Every trip. One map.">
+      <article class="plate light" data-i="0" data-tint="#E8401E" aria-label="Every trip. One map.">
         <img src="assets/panels/atlas-700.webp" srcset="assets/panels/atlas-700.webp 700w, assets/panels/atlas-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="The Explore atlas: every trip on one map of North America, with dotted flight lines and airport codes." width="700" height="1521" fetchpriority="high" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Every</span> <span class="w" style="transition-delay:0.10s">trip.</span><br><span class="w" style="transition-delay:0.15s">One</span> <span class="w" style="transition-delay:0.20s">map.</span></h3><p><span class="w" style="transition-delay:0.32s">Drawn from your phone’s own<br>location history.</span></p></div>
       </article>
-      <article class="plate light" data-i="1" aria-label="Fly back through any trip.">
+      <article class="plate light" data-i="1" data-tint="#1180CE" aria-label="Fly back through any trip.">
         <img src="assets/panels/flythrough-700.webp" srcset="assets/panels/flythrough-700.webp 700w, assets/panels/flythrough-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="The flythrough replaying a trip through Gardiner and Yellowstone on a 3D map, with a scrubber." width="700" height="1521" fetchpriority="high" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Fly</span> <span class="w" style="transition-delay:0.10s">back</span><br><span class="w" style="transition-delay:0.15s">through</span><br><span class="w" style="transition-delay:0.20s">any</span> <span class="w" style="transition-delay:0.25s">trip.</span></h3></div>
       </article>
-      <article class="plate light" data-i="2" aria-label="Hang a trip on your wall.">
+      <article class="plate light" data-i="2" data-tint="#E8401E" aria-label="Hang a trip on your wall.">
         <img src="assets/panels/plaque-700.webp" srcset="assets/panels/plaque-700.webp 700w, assets/panels/plaque-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="The plaque designer showing a Dublin and Galway trip as a 3D relief, with paint colours." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Hang</span> <span class="w" style="transition-delay:0.10s">a</span> <span class="w" style="transition-delay:0.15s">trip</span><br><span class="w" style="transition-delay:0.20s">on</span> <span class="w" style="transition-delay:0.25s">your</span> <span class="w" style="transition-delay:0.30s">wall.</span></h3><p><span class="w" style="transition-delay:0.42s">Your route, 3D-printed and painted,<br>shipped to US addresses.</span></p></div>
       </article>
-      <article class="plate dark" data-i="3" aria-label="It fills itself in.">
+      <article class="plate dark" data-i="3" data-tint="#F5B301" aria-label="It fills itself in.">
         <img src="assets/panels/nologging-700.webp" srcset="assets/panels/nologging-700.webp 700w, assets/panels/nologging-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="The first-run departures board turning photos, timeline and workouts into trips, routes and journeys." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">It</span> <span class="w" style="transition-delay:0.10s">fills</span><br><span class="w" style="transition-delay:0.15s">itself</span> <span class="w" style="transition-delay:0.20s">in.</span></h3><p><span class="w" style="transition-delay:0.32s">Bring in Google Timeline, Photos as well as<br>Apple Health. New trips record themselves.</span></p></div>
       </article>
-      <article class="plate light" data-i="4" aria-label="Every trip gets its own page.">
+      <article class="plate light" data-i="4" data-tint="#E8401E" aria-label="Every trip gets its own page.">
         <img src="assets/panels/trip-700.webp" srcset="assets/panels/trip-700.webp 700w, assets/panels/trip-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="A trip page for Gardiner and Yellowstone National Park: its route, days, miles and places." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Every</span> <span class="w" style="transition-delay:0.10s">trip</span><br><span class="w" style="transition-delay:0.15s">gets</span> <span class="w" style="transition-delay:0.20s">its</span><br><span class="w" style="transition-delay:0.25s">own</span> <span class="w" style="transition-delay:0.30s">page.</span></h3></div>
       </article>
-      <article class="plate light" data-i="5" aria-label="Put two years side by side.">
+      <article class="plate light" data-i="5" data-tint="#12795A" aria-label="Put two years side by side.">
         <img src="assets/panels/eachyear-700.webp" srcset="assets/panels/eachyear-700.webp 700w, assets/panels/eachyear-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="Compare years: 2025 and 2026 trips on two maps side by side." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Put</span> <span class="w" style="transition-delay:0.10s">two</span> <span class="w" style="transition-delay:0.15s">years</span><br><span class="w" style="transition-delay:0.20s">side</span> <span class="w" style="transition-delay:0.25s">by</span> <span class="w" style="transition-delay:0.30s">side.</span></h3></div>
       </article>
-      <article class="plate light" data-i="6" aria-label="Your year, issued as a ticket.">
+      <article class="plate light" data-i="6" data-tint="#1180CE" aria-label="Your year, issued as a ticket.">
         <img src="assets/panels/review-700.webp" srcset="assets/panels/review-700.webp 700w, assets/panels/review-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="Year in review cards: ground covered on an odometer, styled as tickets." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Your</span> <span class="w" style="transition-delay:0.10s">year,</span><br><span class="w" style="transition-delay:0.15s">issued</span> <span class="w" style="transition-delay:0.20s">as</span><br><span class="w" style="transition-delay:0.25s">a</span> <span class="w" style="transition-delay:0.30s">ticket.</span></h3></div>
       </article>
-      <article class="plate light" data-i="7" aria-label="Every mile, counted.">
+      <article class="plate light" data-i="7" data-tint="#E8401E" aria-label="Every mile, counted.">
         <img src="assets/panels/record-700.webp" srcset="assets/panels/record-700.webp 700w, assets/panels/record-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="The You tab: a year of stats as bubbles — share flown and driven, trips, miles, places, cities." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Every</span> <span class="w" style="transition-delay:0.10s">mile,</span><br><span class="w" style="transition-delay:0.15s">counted.</span></h3></div>
       </article>
-      <article class="plate dark" data-i="8" aria-label="Home doesn’t count.">
+      <article class="plate dark" data-i="8" data-tint="#F5B301" aria-label="Home doesn’t count.">
         <img src="assets/panels/home-700.webp" srcset="assets/panels/home-700.webp 700w, assets/panels/home-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="Editing a place that does not count: Home, drawn as a circle on a map of Portland with a radius slider." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">Home</span> <span class="w" style="transition-delay:0.10s">doesn’t</span><br><span class="w" style="transition-delay:0.15s">count.</span></h3><p><span class="w" style="transition-delay:0.27s">Mark home and work. Time there<br>never becomes a trip.</span></p></div>
       </article>
-      <article class="plate dark" data-i="9" aria-label="No account. No ads.">
+      <article class="plate dark" data-i="9" data-tint="#F7F4ED" aria-label="No account. No ads.">
         <img src="assets/panels/yours-700.webp" srcset="assets/panels/yours-700.webp 700w, assets/panels/yours-1100.webp 1100w" sizes="(max-height: 700px) 330px, 46vh" alt="Settings: add trips from Timeline, Photos and Health; automatic tracking; places that don’t count." width="700" height="1521" loading="lazy" decoding="async">
         <div class="copy"><h3><span class="w" style="transition-delay:0.05s">No</span> <span class="w" style="transition-delay:0.10s">account.</span><br><span class="w" style="transition-delay:0.15s">No</span> <span class="w" style="transition-delay:0.20s">ads.</span></h3><p><span class="w" style="transition-delay:0.32s">Your library lives on your iPhone<br>and in your own iCloud.</span></p></div>
       </article>
@@ -135,7 +136,7 @@
 </section>
 
 <!-- ═══ It fills itself in ═══ -->
-<section class="sect fills" id="fills">
+<section class="sect fills" id="fills" data-tint="#F5B301">
   <div class="inner">
     <div>
       <p class="kicker rise">No logging</p>
@@ -155,7 +156,7 @@
 </section>
 
 <!-- ═══ Every mile, counted ═══ -->
-<section class="sect miles" id="miles">
+<section class="sect miles" id="miles" data-tint="#C0300F">
   <div class="inner">
     <div>
       <p class="kicker rise">Your record</p>
@@ -171,7 +172,7 @@
 </section>
 
 <!-- ═══ Privacy: no account, no ads ═══ -->
-<section class="sect private" id="private">
+<section class="sect private" id="private" data-tint="#F7F4ED">
   <div class="inner">
     <p class="kicker rise">Yours</p>
     <h2 class="rise d1">No account.<br>No ads.</h2>
@@ -202,7 +203,7 @@
 </section>
 
 <!-- ═══ The plaque ═══ -->
-<section class="sect plaque" id="plaque">
+<section class="sect plaque" id="plaque" data-tint="#1180CE">
   <div class="inner">
     <div>
       <p class="kicker rise">The one thing that costs money</p>
@@ -222,7 +223,7 @@
 
 </main>
 
-<footer class="foot">
+<footer class="foot" data-tint="#16150F">
   <div class="inner">
     <div class="big">
       <h2>Fly back through<br>any trip.</h2>
@@ -242,7 +243,7 @@
   </div>
 </footer>
 
-<script src="assets/site.js" defer></script>
-<script src="assets/plaque.js" defer></script>
+<script src="assets/site.js?v=d679101c" defer></script>
+<script src="assets/plaque.js?v=414ea885" defer></script>
 </body>
 </html>

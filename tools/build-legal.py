@@ -75,6 +75,7 @@ def shell(p, base, current):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
+<meta name="theme-color" content="#E8401E">
 <title>{p["title"]}</title>
 {p["icon"]}
 <link rel="preload" href="{base}fonts/BricolageGrotesque-ExtraBold.ttf" as="font" type="font/ttf" crossorigin>
@@ -100,7 +101,7 @@ def shell(p, base, current):
   </div>
 </nav>
 
-<header class="doc-head">
+<header class="doc-head" data-tint="#E8401E">
   <img class="map" src="{base}assets/world.svg" alt="" width="2000" height="1173">
   <div class="inner">
     <p class="kicker">{p["kicker"]}</p>
@@ -109,12 +110,12 @@ def shell(p, base, current):
   </div>
 </header>
 
-<div class="doc-wrap">
+<div class="doc-wrap" data-tint="#F7F4ED">
   <aside class="toc" aria-label="On this page"><p class="mono">On this page</p><ol id="toc"></ol></aside>
   <main class="doc" id="doc">{main}</main>
 </div>
 
-<footer class="foot">
+<footer class="foot" data-tint="#16150F">
   <div class="inner">
     <svg class="wm" viewBox="0 0 247.43 108.6" aria-hidden="true"><use href="#wm"/></svg>
     <div class="cols">
