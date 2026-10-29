@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  GitHub Pages serves this for any missing path. Its one job: once the site moves to its own
+  domain, the legal pages still link to /roamix/… (they are frozen and never edited), so on any
+  host other than github.io a /roamix/… address is sent to the same page without the prefix.
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roamix</title>
+<script>
+  (function () {
+    var p = location.pathname;
+    if (!/github\.io$/.test(location.hostname) && p.indexOf('/roamix/') === 0) {
+      location.replace(p.slice(7) + location.search + location.hash);
+    }
+  })();
+</script>
+<style>
+  @font-face { font-family: "Bricolage Grotesque"; src: url("/fonts/BricolageGrotesque-ExtraBold.ttf") format("truetype"); font-weight: 800; }
+  @font-face { font-family: "Martian Mono"; src: url("/fonts/MartianMono-Regular.ttf") format("truetype"); }
+  html, body { margin: 0; height: 100%; background: #E8401E; color: #F7F4ED; }
+  body { display: grid; place-items: center; text-align: center; padding: 24px; font-family: "Martian Mono", ui-monospace, monospace; }
+  h1 { font: 800 clamp(48px, 12vw, 120px)/0.92 "Bricolage Grotesque", system-ui, sans-serif; letter-spacing: -0.035em; margin: 0 0 18px; }
+  p { font-size: 13px; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 28px; }
+  a { display: inline-block; background: #F7F4ED; color: #16150F; text-decoration: none; font: 500 16px/1 system-ui, sans-serif; padding: 18px 28px; border-radius: 999px; }
+</style></head>
+<body><main><h1>Off the map.</h1><p>404 · No page here</p><a id="home" href="/">Back to Roamix</a></main>
+<script>if (/github\.io$/.test(location.hostname)) document.getElementById("home").href = "/roamix/";</script></body></html>
