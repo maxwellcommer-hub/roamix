@@ -51,7 +51,13 @@ checking all four:
 
 Bump the effective date in all of them together when the policy materially changes.
 
-`terms.html`, `support.html` and `index.html` are **generated from `privacy.html`'s own
+`index.html` is now the home page (getroamix.com), built on its own design — `assets/site.css`,
+`assets/site.js`, the plates in `assets/panels/` (from the 1.2 store screenshots, headlines masked
+out and set as live type) and the atlas `assets/world.svg` (Natural Earth 50m). Every link on it is
+relative, so it works on github.io and on the custom domain. `404.html` sends the legal pages'
+old absolute `/roamix/…` links to the right place once the domain is on.
+
+`terms.html` and `support.html` are **generated from `privacy.html`'s own
 shell** (same head, tokens, header field and footer) so the four pages can never drift
 apart visually. Regenerate rather than hand-editing the shared chrome.
 
