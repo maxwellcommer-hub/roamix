@@ -117,7 +117,10 @@
       const L = i ? (gl / 2 + H * .3) * reach : 0, R = i < P.length - 1 ? (gr / 2 + H * .3) * reach : 0;
       return { x: b.x - L, y: b.y, w: b.w + L + R, h: b.h, r: b.r };
     });
-    const U = union(S, 20);
+    // the neck reaches no further than the narrowest gap, so pills that sit close (a phone's
+    // tight bar) still part cleanly at rest instead of staying bridged
+    const minGap = Math.min(...P.slice(1).map((b, i) => b.x - (P[i].x + P[i].w)), 40);
+    const U = union(S, Math.max(6, Math.min(20, minGap * .7)));
     if (t >= 1 - 1e-3 && t <= 1 + 1e-3) paintGoo(navCv, U, INKS.paper, 2);
     else if (Math.abs(t) < 1e-3) paintGoo(navCv, (x, y) => sdBox(x, y, bar), INKS.paper, 2);
     else paintGoo(navCv, (x, y) => { const a = sdBox(x, y, bar), b = U(x, y); return a + (b - a) * t; }, INKS.paper, 2);
@@ -148,9 +151,9 @@
   const drawPick = () => {
     const w = Math.max(0, eR.v - eL.v), rest = Math.max(1, eR.to - eL.to);
     const stretch = Math.max(0, w / rest - 1);
-    const h = 40 / (1 + stretch * .55);
+    const H0 = pick.offsetHeight || 40, h = H0 / (1 + stretch * .55);
     pick.style.width = `${w}px`;
-    pick.style.transform = `translate3d(${eL.v}px, ${(40 - h) / 2}px, 0) scaleY(${h / 40})`;
+    pick.style.transform = `translate3d(${eL.v}px, ${(H0 - h) / 2}px, 0) scaleY(${h / H0})`;
   };
   const pickTick = dt => { const a = eL.step(dt), b = eR.step(dt); drawPick(); return a || b; };
   const moveTo = a => {
@@ -208,7 +211,6 @@
       // Safari 26 prefers a fixed/sticky element touching the top (the tour's pinned frame)
       // and then the page background over theme-color, so both carry the colour too
       document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c;
-      const pinEl = document.querySelector('.pano .pin'); if (pinEl) pinEl.style.backgroundColor = c;
     }
   };
   measureTint(); addEventListener('load', measureTint);
@@ -280,6 +282,32 @@
     glideTo(Math.min(y, document.documentElement.scrollHeight - innerHeight));
     history.replaceState(null, '', href === './' ? location.pathname : href);
   }));
+
+  // ── A light smooth scroll, for a mouse wheel or trackpad only ───────────────────────────
+  // Touch keeps the phone's own scrolling (nothing beats it), and so do the keyboard and the
+  // scrollbar. Each wheel step moves a target; the page eases toward it, frame-rate
+  // independent, and lets go the moment it arrives. Reduced Motion turns it off.
+  if (matchMedia('(pointer: fine)').matches && !still) {
+    let target = scrollY, cur = scrollY, running = false, last = 0;
+    const maxY = () => document.documentElement.scrollHeight - innerHeight;
+    const step = now => {
+      const dt = Math.min(48, now - (last || now)) / 16.67; last = now;
+      cur += (target - cur) * (1 - Math.pow(1 - .16, dt));
+      if (Math.abs(target - cur) < .5) { cur = target; running = false; last = 0; }
+      scrollTo(0, cur);
+      if (running) requestAnimationFrame(step);
+    };
+    addEventListener('wheel', e => {
+      if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.target.closest('.toc')) return;
+      e.preventDefault();
+      if (!running) { cur = scrollY; target = scrollY; }
+      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaMode === 2 ? e.deltaY * innerHeight : e.deltaY;
+      target = Math.min(maxY(), Math.max(0, target + dy));
+      if (!running) { running = true; requestAnimationFrame(step); }
+    }, { passive: false });
+    // anything else that scrolls the page (a link glide, the keyboard) resets the target
+    addEventListener('scroll', () => { if (!running) target = cur = scrollY; }, { passive: true });
+  }
 
   let sizePano = () => {};
   // Each section below runs only on a page that has it (the legal pages share this file).
@@ -374,6 +402,19 @@
   const pano = $('#tour'), strip = $('#strip'), plates = $$('.plate', strip);
   const ticks = $('#ticks'), num = $('#pano-n');
   plates.forEach(() => ticks.append(document.createElement('i')));
+  // each plate shows its own ink until its picture arrives, and the picture fades in over it;
+  // the pictures start loading while the tour is still a screen and a half away
+  const pinEl = $('.pin', pano);
+  plates.forEach(p => {
+    p.style.backgroundColor = p.dataset.tint;
+    const img = $('img', p), done = () => img.classList.add('loaded');
+    img.complete && img.naturalWidth ? done() : img.addEventListener('load', done, { once: true });
+  });
+  const early = new IntersectionObserver(es => {
+    if (!es[0].isIntersecting) return;
+    early.disconnect(); plates.forEach(p => { $('img', p).loading = 'eager'; });
+  }, { rootMargin: '150% 0px 150% 0px' });
+  early.observe(pano);
   const tickEls = $$('i', ticks);
   // measured on resize only; the scroll path is pure arithmetic and one transform write
   let travel = 0, panoTop = 0, plateW = 1, lastOn = -1, lastF = -1;
@@ -390,14 +431,17 @@
     pano.style.height = `${pin.offsetHeight + travel}px`;
     strip.style.setProperty('--travel', `${-travel}px`);
     panoTop = pano.getBoundingClientRect().top + scrollY;
-    if (cssDriven) strip.style.animationRange = `${panoTop}px ${panoTop + travel}px`;
+    if (cssDriven) {
+      strip.style.animationRange = pin.style.animationRange = `${panoTop}px ${panoTop + travel}px`;
+      pin.style.setProperty('--hold', `${travel}px`);
+    }
     lastF = -1; panoScroll();
   };
   // Where the browser can, the strip is a scroll-driven CSS animation, so it moves on the
   // compositor in lockstep with the finger — a JS transform written after each scroll event
   // trails the touch on a phone and judders. JS only keeps the ticks and labels.
   const cssDriven = CSS.supports('animation-timeline: scroll()') && !still;
-  if (cssDriven) strip.classList.add('scroll-driven');
+  if (cssDriven) { strip.classList.add('scroll-driven'); pano.classList.add('scroll-driven'); }
   const panoScroll = () => {
     const top = panoTop - scrollY, f = travel ? Math.min(1, Math.max(0, -top / travel)) : 0;
     if (!cssDriven && f !== lastF) { strip.style.transform = `translate3d(${-f * travel}px,0,0)`; lastF = f; }
