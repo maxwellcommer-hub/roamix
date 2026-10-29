@@ -17,23 +17,145 @@
   }), { threshold: .18, rootMargin: '0px 0px -6% 0px' });
   $$('.sect .rise, .foot .rise, .stub, .ticket').forEach(el => io.observe(el));
 
-  // ── Nav: one bar at the top; pinches into three pills once you scroll ───────────────
-  const nav = $('#nav');
-  const foot = $('.foot');
-  const onScrollNav = () => {
-    nav.classList.toggle('split', scrollY > 40);
-    nav.classList.toggle('onink', foot.getBoundingClientRect().top < 40);
+  // ── Goo: our opaque liquid glass ───────────────────────────────────────────────────
+  // A goo surface is a set of rounded boxes. The canvas is painted as ONE vector outline:
+  // the smooth-min union of the boxes' signed distance fields, contoured by marching squares
+  // (edges interpolated, so the outline is exact to a fraction of a pixel) and filled as a
+  // single path. Apart, a box keeps its true shape; within `k` of another it necks to it.
+  const sdBox = (x, y, b) => {
+    const r = Math.min(b.r, b.w / 2, b.h / 2);
+    const qx = Math.abs(x - b.x - b.w / 2) - b.w / 2 + r, qy = Math.abs(y - b.y - b.h / 2) - b.h / 2 + r;
+    return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - r;
   };
-  addEventListener('scroll', onScrollNav, { passive: true }); onScrollNav();
+  const smin = (a, b, k) => { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k * .25; };
+  const union = (boxes, k) => (x, y) => {
+    let d = 1e9;
+    for (const b of boxes) d = d === 1e9 ? sdBox(x, y, b) : smin(d, sdBox(x, y, b), k);
+    return d;
+  };
+  // paint field(x,y) (css px, negative inside) into a canvas, in one colour
+  const paintGoo = (cv, field, color, step = 2, region) => {
+    const dpr = Math.min(devicePixelRatio || 1, 3);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!region) ctx.clearRect(0, 0, W, H);
+    const [x0, y0, x1, y1] = region || [0, 0, W, H];
+    const nx = Math.ceil((x1 - x0) / step) + 1, ny = Math.ceil((y1 - y0) / step) + 1;
+    const v = new Float32Array(nx * ny);
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) v[j * nx + i] = field(x0 + i * step, y0 + j * step);
+    const p = new Path2D();
+    const cx = [0, 1, 1, 0], cy = [0, 0, 1, 1];
+    for (let j = 0; j < ny - 1; j++) for (let i = 0; i < nx - 1; i++) {
+      const c = [v[j * nx + i], v[j * nx + i + 1], v[(j + 1) * nx + i + 1], v[(j + 1) * nx + i]];
+      if (c[0] >= 0 && c[1] >= 0 && c[2] >= 0 && c[3] >= 0) continue;
+      const X = x0 + i * step, Y = y0 + j * step;
+      if (c[0] < 0 && c[1] < 0 && c[2] < 0 && c[3] < 0) { p.rect(X, Y, step, step); continue; }
+      let first = true;
+      for (let k = 0; k < 4; k++) {
+        const n = (k + 1) % 4;
+        if (c[k] < 0) { const px = X + cx[k] * step, py = Y + cy[k] * step; first ? p.moveTo(px, py) : p.lineTo(px, py); first = false; }
+        if ((c[k] < 0) !== (c[n] < 0)) {
+          const t = c[k] / (c[k] - c[n]);
+          const px = X + (cx[k] + (cx[n] - cx[k]) * t) * step, py = Y + (cy[k] + (cy[n] - cy[k]) * t) * step;
+          first ? p.moveTo(px, py) : p.lineTo(px, py); first = false;
+        }
+      }
+      p.closePath();
+    }
+    ctx.fillStyle = color;
+    ctx.fill(p);
+  };
+  // a critically-tuned spring you can retarget mid-flight (RoamixMotion's response/damping)
+  class Spring {
+    constructor(v, response, damping) { this.v = v; this.to = v; this.vel = 0; this.set(response, damping); }
+    set(response, damping) { const w = 2 * Math.PI / response; this.k = w * w; this.c = 2 * damping * w; }
+    step(dt) { const f = -this.k * (this.v - this.to) - this.c * this.vel; this.vel += f * dt; this.v += this.vel * dt; return this.busy(); }
+    busy() { return Math.abs(this.v - this.to) > .0005 || Math.abs(this.vel) > .0005; }
+    snap() { this.v = this.to; this.vel = 0; }
+  }
+  // one animation loop for every goo surface: each registers a tick(dt) → still busy?
+  const ticking = new Set();
+  let loopOn = false, lastT = 0;
+  const loop = now => {
+    const dt = Math.min(.034, (now - (lastT || now)) / 1000) || 1 / 60; lastT = now;
+    for (const t of [...ticking]) if (!t(dt)) ticking.delete(t);
+    if (ticking.size) requestAnimationFrame(loop); else { loopOn = false; lastT = 0; }
+  };
+  const wake = t => { ticking.add(t); if (!loopOn) { loopOn = true; requestAnimationFrame(loop); } };
+  const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const INKS = { ink: cssVar('--ink'), paper: cssVar('--paper') };
 
-  const links = $$('.nav .links a'), pick = $('.nav .pick'), blobs = pick ? $$('b', pick) : [];
-  let current = null;
+  // ── Nav: one bar at the top; pinches into pills once you scroll ───────────────────────
+  // The bar and the pills are two fields; the canvas paints a blend of them. Blending
+  // distance fields (not pictures) is what makes the pinch: the bar thins between the pills,
+  // necks, and lets go — then the ends round off.
+  const nav = $('#nav'), navCv = $('canvas.goo', nav), foot = $('.foot');
+  const navSplit = new Spring(0, .62, .7);
+  let navInk = INKS.ink;
+  const pills = () => {
+    const nb = nav.getBoundingClientRect();
+    return $$('.row > *', nav).filter(el => el.offsetWidth).map(el => {
+      const r = el.getBoundingClientRect();
+      return { x: r.left - nb.left, y: 0, w: r.width, h: nb.height, r: nb.height / 2 };
+    });
+  };
+  const paintNav = () => {
+    const W = nav.clientWidth, H = nav.clientHeight;
+    const bar = { x: 0, y: 0, w: W, h: H, r: H / 2 };
+    const t = Math.max(-.08, Math.min(1.12, navSplit.v));
+    // each pill reaches across its gap while the split is young, so the bar draws apart
+    // like taffy (round ends all the way) instead of thinning to points over a wide gap
+    const P = pills(), reach = 1 - Math.min(1, Math.max(0, t));
+    const S = P.map((b, i) => {
+      const gl = i ? b.x - (P[i - 1].x + P[i - 1].w) : 0, gr = i < P.length - 1 ? P[i + 1].x - (b.x + b.w) : 0;
+      const L = i ? (gl / 2 + H * .3) * reach : 0, R = i < P.length - 1 ? (gr / 2 + H * .3) * reach : 0;
+      return { x: b.x - L, y: b.y, w: b.w + L + R, h: b.h, r: b.r };
+    });
+    const U = union(S, 20);
+    paintGoo(navCv, (x, y) => { const a = sdBox(x, y, bar), b = U(x, y); return a + (b - a) * t; }, navInk, 1.5);
+  };
+  const navTick = dt => { const busy = navSplit.step(dt); paintNav(); return busy; };
+  const onScrollNav = () => {
+    const split = scrollY > 40 ? 1 : 0;
+    if (navSplit.to !== split) { navSplit.to = split; still ? (navSplit.snap(), paintNav()) : wake(navTick); }
+    const onink = foot.getBoundingClientRect().top < 40;
+    if (nav.classList.contains('onink') !== onink) { nav.classList.toggle('onink', onink); navInk = onink ? INKS.paper : INKS.ink; paintNav(); }
+  };
+  addEventListener('scroll', onScrollNav, { passive: true });
+  addEventListener('resize', paintNav);
+  navSplit.to = navSplit.v = scrollY > 40 ? 1 : 0;
+  onScrollNav(); paintNav();
+  document.fonts?.ready.then(paintNav);
+  // ?goo-debug: freeze the pinch at any point, to look at a single frame of it
+  if (location.search.includes('goo-debug')) window.gooNav = v => { navSplit.v = navSplit.to = v; navSplit.vel = 0; paintNav(); };
+
+  // the link lozenge: leading edge on a quick spring, trailing edge on a slower one,
+  // so a move stretches it out and thins it, and it lands round
+  const links = $$('.nav .links a'), pick = $('.nav .pick');
+  const eL = new Spring(0, .34, .72), eR = new Spring(0, .34, .72);
+  let current = null, placed = false;
+  const drawPick = () => {
+    const w = Math.max(0, eR.v - eL.v), rest = Math.max(1, eR.to - eL.to);
+    const stretch = Math.max(0, w / rest - 1);
+    const h = 40 / (1 + stretch * .55);
+    pick.style.width = `${w}px`;
+    pick.style.transform = `translate3d(${eL.v}px, ${(40 - h) / 2}px, 0) scaleY(${h / 40})`;
+  };
+  const pickTick = dt => { const a = eL.step(dt), b = eR.step(dt); drawPick(); return a || b; };
   const moveTo = a => {
-    if (!a) { pick.classList.remove('live'); links.forEach(l => l.classList.remove('on')); return; }
-    const box = a.parentElement.getBoundingClientRect(), r = a.getBoundingClientRect();
-    blobs.forEach(b => { b.style.transform = `translateX(${r.left - box.left}px)`; b.style.width = `${r.width}px`; });
-    pick.classList.add('live');
     links.forEach(l => l.classList.toggle('on', l === a));
+    if (!a) { pick.classList.remove('live'); placed = false; return; }
+    const box = a.parentElement.getBoundingClientRect(), r = a.getBoundingClientRect();
+    const L = r.left - box.left, R = L + r.width;
+    const right = L > eL.to;
+    eL.to = L; eR.to = R;
+    // the edge in the direction of travel leads; the other trails
+    (right ? eR : eL).set(.3, .78); (right ? eL : eR).set(.52, .7);
+    if (!placed || still) { eL.snap(); eR.snap(); drawPick(); placed = true; }
+    else wake(pickTick);
+    pick.classList.add('live');
   };
   links.forEach(a => {
     a.addEventListener('pointerenter', () => moveTo(a));
@@ -48,8 +170,36 @@
   };
   addEventListener('scroll', spy, { passive: true });
 
-  // ── Goo buttons know their own width, so the droplets bud off the ends ──────────────
-  $$('.gbtn').forEach(b => { const set = () => b.style.setProperty('--w', b.offsetWidth + 'px'); set(); new ResizeObserver(set).observe(b); });
+  // ── Goo buttons: the pill swells where your pointer is and the swell follows it along,
+  //    like a finger pressed up under a skin of ink. Nothing comes loose. ────────────────
+  $$('.gbtn').forEach(btn => {
+    const cv = $('canvas.goo', btn), PADX = 64, PADY = 40;
+    const hov = new Spring(0, .5, .62), press = new Spring(0, .28, .6), at = new Spring(.5, .32, .8);
+    const paint = () => {
+      const fill = getComputedStyle(btn).getPropertyValue('--fill').trim() || INKS.paper;
+      const w = btn.offsetWidth, h = btn.offsetHeight, t = Math.max(0, hov.v), q = press.v;
+      const body = { x: PADX + q * 4, y: PADY + q * 3, w: w - q * 8, h: h - q * 6, r: (h - q * 6) / 2 };
+      // the swell: a disc a little taller than the pill, riding under the pointer
+      const R = h / 2 * (1 + .24 - .1 * q);
+      const cx = PADX + h / 2 + (w - h) * Math.min(1, Math.max(0, at.v));
+      const swell = { x: cx - R, y: PADY + h / 2 - R, w: 2 * R, h: 2 * R, r: R };
+      // blended in by the hover itself, so at rest the pill is exactly a pill
+      const U = union([body, swell], 40);
+      paintGoo(cv, t < .002 ? (x, y) => sdBox(x, y, body) : (x, y) => { const a = sdBox(x, y, body); return a + (U(x, y) - a) * Math.min(1, t); }, fill, 1.5);
+    };
+    const tick = dt => { const a = hov.step(dt), b = press.step(dt), c = at.step(dt); paint(); return a || b || c; };
+    const go = (s, v) => { s.to = v; still ? (s.snap(), paint()) : wake(tick); };
+    const track = e => { const r = btn.getBoundingClientRect(); go(at, (e.clientX - r.left - r.height / 2) / Math.max(1, r.width - r.height)); };
+    btn.addEventListener('pointerenter', e => { at.v = at.to = Math.min(1, Math.max(0, (e.clientX - btn.getBoundingClientRect().left) / btn.offsetWidth)); go(hov, 1); track(e); });
+    btn.addEventListener('pointermove', track);
+    btn.addEventListener('pointerleave', () => { go(hov, 0); go(press, 0); });
+    btn.addEventListener('focus', () => { go(at, .5); go(hov, 1); });
+    btn.addEventListener('blur', () => go(hov, 0));
+    btn.addEventListener('pointerdown', () => go(press, 1));
+    btn.addEventListener('pointerup', () => go(press, 0));
+    new ResizeObserver(paint).observe(btn);
+    document.fonts?.ready.then(paint);
+  });
 
   // ── Hero: land fades up, the route draws itself, airports stamp down as it reaches them ─
   const hero = $('.hero');
@@ -106,6 +256,30 @@
     };
     requestAnimationFrame(run);
   };
+  // keep the route and its airport labels well clear of the lockup: measure where the line
+  // and labels fall over the wordmark's width, and lift the atlas until there's air
+  const mapLayers = [$('.hero .map'), $('.hero .routes')];
+  const clearLogo = () => {
+    mapLayers.forEach(l => l.style.translate = '');
+    const wmEl = $('.hero .wordmark'), r0 = wmEl.getBoundingClientRect();
+    const rise = parseFloat((getComputedStyle(wmEl).translate || '0 0').split(' ')[1]) || 0;
+    const wm = { left: r0.left, right: r0.right, top: r0.top - rise, width: r0.width };
+    const svg = $('.hero .routes'), M = svg.getScreenCTM();
+    if (!M || !wm.width) return;
+    const L = wm.left - 70, R = wm.right + 70;
+    let low = -Infinity;
+    for (let s = 0; s <= len; s += 6) {
+      const q = mask.getPointAtLength(s), x = M.a * q.x + M.c * q.y + M.e, y = M.b * q.x + M.d * q.y + M.f;
+      if (x > L && x < R) low = Math.max(low, y + 6);
+    }
+    ports.forEach(p => { const b = p.getBoundingClientRect(); if (b.right > L && b.left < R) low = Math.max(low, b.bottom); });
+    const air = Math.max(56, innerHeight * .07);
+    const lift = Math.min(innerHeight * .22, Math.max(0, low + air - wm.top));
+    if (lift) mapLayers.forEach(l => l.style.translate = `0 ${-lift}px`);
+  };
+  clearLogo();
+  addEventListener('resize', clearLogo);
+  document.fonts?.ready.then(clearLogo);
   setDraw(0);
   if (document.readyState === 'complete') startHero(); else addEventListener('load', startHero);
   // fonts can land after load on a slow line; don't hold the page for them
@@ -195,19 +369,32 @@
   ];
   const labels = $('.labels', field);
   const B = data.map(([v, l, ink, s], i) => {
-    const el = document.createElement('i'); el.style.background = INK[ink][0];
-    $(`.ink[data-ink="${ink}"]`, field).append(el);
     const lab = document.createElement('div'); lab.style.color = INK[ink][1];
     lab.innerHTML = `<div><b data-v="${v}">${v}</b><small>${l}</small></div>`;
     labels.append(lab);
     const a = i / data.length * Math.PI * 2;
-    return { el, lab, s, ink, x: .5 + Math.cos(a) * .32, y: .5 + Math.sin(a) * .32, vx: 0, vy: 0, w: 0, h: 0, ph: Math.random() * 6.28, held: false };
+    return { lab, s, ink, x: .5 + Math.cos(a) * .32, y: .5 + Math.sin(a) * .32, vx: 0, vy: 0, w: 0, h: 0, ph: Math.random() * 6.28, held: false };
   });
+  // the tiles are the You tab's rounded rectangles; one canvas, one pass per ink, so the
+  // same ink necks into itself and two inks never blend
+  const bubCv = $('canvas.goo', field);
+  let settling = true;
+  const paintBubbles = () => {
+    if (!FW || settling) return;
+    let first = true;
+    for (const ink of Object.keys(INK)) {
+      const boxes = B.filter(b => b.ink === ink).map(b => ({ x: b.x * FW - b.w / 2, y: b.y * FH - b.h / 2, w: b.w, h: b.h, r: b.h * .3 }));
+      if (!boxes.length) continue;
+      paintGoo(bubCv, union(boxes, 26), INK[ink][0], 3, first ? null : [0, 0, FW, FH]);
+      first = false;
+    }
+  };
   let FW = 0, FH = 0;
   const sizeBubbles = () => {
     FW = field.clientWidth; FH = field.clientHeight;
     const base = Math.min(FW, FH) * .19;
-    B.forEach(b => { b.h = base * b.s; b.w = b.h * 1.55; b.el.style.width = b.lab.style.width = b.w + 'px'; b.el.style.height = b.lab.style.height = b.h + 'px'; });
+    B.forEach(b => { b.h = base * b.s; b.w = b.h * 1.55; b.lab.style.width = b.w + 'px'; b.lab.style.height = b.h + 'px'; });
+    paintBubbles();
   };
   new ResizeObserver(sizeBubbles).observe(field); sizeBubbles();
 
@@ -266,8 +453,9 @@
         if (b.y < my) { b.y = my; b.vy *= -.5; } if (b.y > 1 - my) { b.y = 1 - my; b.vy *= -.5; }
       }
       const t = `translate3d(${b.x * FW - b.w / 2}px,${b.y * FH - b.h / 2}px,0)`;
-      b.el.style.transform = t; b.lab.style.transform = t;
+      b.lab.style.transform = t;
     });
+    paintBubbles();
     if (live) requestAnimationFrame(step);
   };
   // the numbers roll up when the cluster first comes into view (RollingNumber, roughly)
@@ -293,5 +481,5 @@
   }).observe(field);
   // settle them once so a still page still shows a tidy cluster
   for (let k = 0; k < 400; k++) step(k * 16.67);
-  last = 0;
+  last = 0; settling = false; paintBubbles();
 })();
