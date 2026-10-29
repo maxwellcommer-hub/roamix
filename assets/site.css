@@ -85,23 +85,6 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
   .nav .cta { flex-basis: 150px; }
 }
 
-/* ── The edges under Safari's bars: the page runs on underneath the status bar and the
-      floating toolbar, and a PROGRESSIVE blur — three stacked layers, each blurring more and
-      masked to a narrower band toward the edge — keeps whatever passes under them quiet.
-      Phones only (a desktop window has no bars over the page). The masks are blur ramps,
-      not colour: no ink is drawn here. ── */
-.edge { position: fixed; left: 0; right: 0; z-index: 40; pointer-events: none; display: none; }
-.edge i { position: absolute; inset: 0; }
-.edge.top { display: none !important; }
-.edge.bottom { bottom: 0; height: calc(env(safe-area-inset-bottom, 0px) + 64px); }
-.edge.top i:nth-child(1) { backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); mask: linear-gradient(to top, transparent, #000 60%); -webkit-mask: linear-gradient(to top, transparent, #000 60%); }
-.edge.top i:nth-child(2) { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); mask: linear-gradient(to top, transparent 35%, #000 80%); -webkit-mask: linear-gradient(to top, transparent 35%, #000 80%); }
-.edge.top i:nth-child(3) { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); mask: linear-gradient(to top, transparent 65%, #000); -webkit-mask: linear-gradient(to top, transparent 65%, #000); }
-.edge.bottom i:nth-child(1) { backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); mask: linear-gradient(to bottom, transparent, #000 60%); -webkit-mask: linear-gradient(to bottom, transparent, #000 60%); }
-.edge.bottom i:nth-child(2) { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); mask: linear-gradient(to bottom, transparent 35%, #000 80%); -webkit-mask: linear-gradient(to bottom, transparent 35%, #000 80%); }
-.edge.bottom i:nth-child(3) { backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); mask: linear-gradient(to bottom, transparent 65%, #000); -webkit-mask: linear-gradient(to bottom, transparent 65%, #000); }
-@media (hover: none) and (pointer: coarse) { .edge { display: block; } }
-
 /* ═══ Hero — the atlas, vermilion ground, land in the deep pull ═══ */
 .hero { position: relative; min-height: max(100vh, 640px); min-height: max(100lvh, 640px); display: grid; place-items: end center; overflow: hidden; background: var(--verm); color: var(--paper); isolation: isolate; }
 .hero .map, .hero .routes { position: absolute; left: 0; top: -15%; width: 100%; height: 118%; object-fit: cover; object-position: 50% 50%; z-index: -1; }
@@ -151,6 +134,8 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
    floating toolbar, however that toolbar measures the viewport */
 .pano .pin { position: sticky; top: 0; height: calc(100vh + 96px); height: calc(100lvh + 96px); overflow: hidden; }
 .pano .strip { display: flex; height: 100%; will-change: transform; }
+.pano .strip.scroll-driven { animation: strip-slide linear both; animation-timeline: scroll(root block); }
+@keyframes strip-slide { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(var(--travel, 0px), 0, 0); } }
 .plate { position: relative; flex: none; height: 100%; aspect-ratio: 1320 / 2868; container-type: inline-size; overflow: hidden; }
 .plate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .plate .copy { position: absolute; left: 7.65cqw; right: 6cqw; top: 11.1cqw; }
@@ -163,6 +148,9 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .pano .rail .ticks { position: relative; display: flex; gap: 6px; }
 .pano .rail .ticks i { width: 14px; height: 4px; border-radius: 2px; background: var(--paper); opacity: .3; transition: opacity .3s, width var(--t-settle) var(--ease-settle); }
 .pano .rail .ticks i.on { opacity: 1; width: 28px; }
+.pano .rail { transition: none; }
+/* on a phone the floating toolbar already sits at the bottom: no second pill under it */
+@media (hover: none) and (pointer: coarse) { .pano .rail { display: none; } }
 .pano .hint { position: absolute; z-index: 2; right: var(--gutter); top: 50%; translate: 0 -50%; display: none; }
 
 /* ═══ Sections ═══ */
