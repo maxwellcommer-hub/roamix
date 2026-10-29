@@ -93,41 +93,48 @@
   // necks, and lets go — then the ends round off.
   const nav = $('#nav'), navCv = $('canvas.goo', nav), foot = $('.foot');
   const navSplit = new Spring(0, .62, .7);
-  let navInk = INKS.ink;
-  const pills = () => {
+  // Geometry is measured once (and on resize), never per frame: reading layout inside an
+  // animation forces the browser to recompute it, which is where jank comes from.
+  let P0 = [];
+  const measureNav = () => {
     const nb = nav.getBoundingClientRect();
-    return $$('.row > *', nav).filter(el => el.offsetWidth).map(el => {
+    P0 = $$('.row > *', nav).filter(el => el.offsetWidth).map(el => {
       const r = el.getBoundingClientRect();
       return { x: r.left - nb.left, y: 0, w: r.width, h: nb.height, r: nb.height / 2 };
     });
   };
+  // painted once per shape in stock; the black is a GPU filter on the canvas (site.css), so
+  // the flip to stock over the footer is a quick compositor fade with no repaint at all
   const paintNav = () => {
     const W = nav.clientWidth, H = nav.clientHeight;
     const bar = { x: 0, y: 0, w: W, h: H, r: H / 2 };
     const t = Math.max(-.08, Math.min(1.12, navSplit.v));
     // each pill reaches across its gap while the split is young, so the bar draws apart
     // like taffy (round ends all the way) instead of thinning to points over a wide gap
-    const P = pills(), reach = 1 - Math.min(1, Math.max(0, t));
+    const P = P0, reach = 1 - Math.min(1, Math.max(0, t));
     const S = P.map((b, i) => {
       const gl = i ? b.x - (P[i - 1].x + P[i - 1].w) : 0, gr = i < P.length - 1 ? P[i + 1].x - (b.x + b.w) : 0;
       const L = i ? (gl / 2 + H * .3) * reach : 0, R = i < P.length - 1 ? (gr / 2 + H * .3) * reach : 0;
       return { x: b.x - L, y: b.y, w: b.w + L + R, h: b.h, r: b.r };
     });
     const U = union(S, 20);
-    paintGoo(navCv, (x, y) => { const a = sdBox(x, y, bar), b = U(x, y); return a + (b - a) * t; }, navInk, 1.5);
+    if (t >= 1 - 1e-3 && t <= 1 + 1e-3) paintGoo(navCv, U, INKS.paper, 2);
+    else if (Math.abs(t) < 1e-3) paintGoo(navCv, (x, y) => sdBox(x, y, bar), INKS.paper, 2);
+    else paintGoo(navCv, (x, y) => { const a = sdBox(x, y, bar), b = U(x, y); return a + (b - a) * t; }, INKS.paper, 2);
   };
-  const navTick = dt => { const busy = navSplit.step(dt); paintNav(); return busy; };
+  const navTick = dt => { const a = navSplit.step(dt); paintNav(); return a; };
+  let footTop = Infinity;
   const onScrollNav = () => {
     const split = scrollY > 40 ? 1 : 0;
     if (navSplit.to !== split) { navSplit.to = split; still ? (navSplit.snap(), paintNav()) : wake(navTick); }
-    const onink = foot.getBoundingClientRect().top < 40;
-    if (nav.classList.contains('onink') !== onink) { nav.classList.toggle('onink', onink); navInk = onink ? INKS.paper : INKS.ink; paintNav(); }
+    nav.classList.toggle('onink', scrollY + 40 > footTop);
   };
-  addEventListener('scroll', onScrollNav, { passive: true });
-  addEventListener('resize', paintNav);
+  const layoutNav = () => { measureNav(); footTop = foot.getBoundingClientRect().top + scrollY; paintNav(); };
+  addEventListener('resize', layoutNav);
   navSplit.to = navSplit.v = scrollY > 40 ? 1 : 0;
-  onScrollNav(); paintNav();
-  document.fonts?.ready.then(paintNav);
+  layoutNav(); onScrollNav();
+  document.fonts?.ready.then(layoutNav);
+  addEventListener('load', layoutNav);
   // ?goo-debug: freeze the pinch at any point, to look at a single frame of it
   if (location.search.includes('goo-debug')) window.gooNav = v => { navSplit.v = navSplit.to = v; navSplit.vel = 0; paintNav(); };
 
@@ -163,12 +170,24 @@
   });
   $('.nav .links')?.addEventListener('pointerleave', () => moveTo(current));
   const sections = links.map(a => $(a.getAttribute('href'))).filter(Boolean);
+  let spans = [];
+  const measureSpy = () => { spans = sections.map(sec => { const r = sec.getBoundingClientRect(); return [r.top + scrollY, r.bottom + scrollY]; }); };
+  measureSpy(); addEventListener('resize', measureSpy); addEventListener('load', measureSpy);
+  let hovering = false;
+  $('.nav .links')?.addEventListener('pointerenter', () => hovering = true);
+  $('.nav .links')?.addEventListener('pointerleave', () => hovering = false);
   const spy = () => {
-    const y = innerHeight * .4; let hit = null;
-    sections.forEach((s, i) => { const r = s.getBoundingClientRect(); if (r.top < y && r.bottom > y) hit = links[i]; });
-    if (hit !== current) { current = hit; if (!$('.nav .links:hover')) moveTo(current); }
+    const y = scrollY + innerHeight * .4; let hit = null;
+    spans.forEach(([t, b], i) => { if (t < y && b > y) hit = links[i]; });
+    if (hit !== current) { current = hit; if (!hovering) moveTo(current); }
   };
-  addEventListener('scroll', spy, { passive: true });
+  // ONE scroll handler, run at most once a frame
+  const onScrollFns = [onScrollNav, spy];
+  let scrollQueued = false;
+  addEventListener('scroll', () => {
+    if (scrollQueued) return; scrollQueued = true;
+    requestAnimationFrame(() => { scrollQueued = false; onScrollFns.forEach(f => f()); });
+  }, { passive: true });
 
   // ── Goo buttons: the pill swells where your pointer is and the swell follows it along,
   //    like a finger pressed up under a skin of ink. Nothing comes loose. ────────────────
@@ -200,6 +219,35 @@
     new ResizeObserver(paint).observe(btn);
     document.fonts?.ready.then(paint);
   });
+
+  // ── In-page links glide to their section instead of jumping ─────────────────────────
+  // An eased scroll whose length follows the distance; a wheel, touch or key stops it, so
+  // it never fights the reader.
+  let glide = 0;
+  const stopGlide = () => { glide = 0; };
+  ['wheel', 'touchstart', 'keydown'].forEach(ev => addEventListener(ev, stopGlide, { passive: true }));
+  const glideTo = y => {
+    const from = scrollY, dist = y - from;
+    if (still || Math.abs(dist) < 2) { scrollTo(0, y); return; }
+    const T = Math.min(1300, Math.max(520, Math.abs(dist) * .35)), t0 = performance.now(), id = ++glide;
+    const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const run = now => {
+      if (id !== glide) return;
+      const t = Math.min(1, (now - t0) / T);
+      scrollTo(0, from + dist * ease(t));
+      if (t < 1) requestAnimationFrame(run);
+    };
+    requestAnimationFrame(run);
+  };
+  $$('a[href^="#"], a[href="./"]').forEach(a => a.addEventListener('click', e => {
+    const href = a.getAttribute('href');
+    const target = href === './' ? document.body : $(href);
+    if (!target || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    e.preventDefault();
+    const y = href === './' ? 0 : target.getBoundingClientRect().top + scrollY;
+    glideTo(Math.min(y, document.documentElement.scrollHeight - innerHeight));
+    history.replaceState(null, '', href === './' ? location.pathname : href);
+  }));
 
   // ── Hero: land fades up, the route draws itself, airports stamp down as it reaches them ─
   const hero = $('.hero');
@@ -290,31 +338,34 @@
   const ticks = $('#ticks'), num = $('#pano-n');
   plates.forEach(() => ticks.append(document.createElement('i')));
   const tickEls = $$('i', ticks);
-  let travel = 0;
+  // measured on resize only; the scroll path is pure arithmetic and one transform write
+  let travel = 0, panoTop = 0, plateW = 1, lastOn = -1, lastF = -1;
   const sizePano = () => {
-    travel = Math.max(0, strip.scrollWidth - innerWidth);
+    plateW = plates[0].offsetWidth || 1;
+    travel = Math.max(0, plateW * plates.length - innerWidth);
     pano.style.height = `${innerHeight + travel}px`;
-    panoScroll();
+    panoTop = pano.getBoundingClientRect().top + scrollY;
+    lastF = -1; panoScroll();
   };
   const panoScroll = () => {
-    const r = pano.getBoundingClientRect();
-    const f = travel ? Math.min(1, Math.max(0, -r.top / travel)) : 0;
-    strip.style.transform = `translate3d(${-f * travel}px,0,0)`;
-    nav.classList.toggle('away', r.top <= 1 && r.bottom >= innerHeight - 1);
-    // which plate is centred, and which have come on screen
-    const mid = innerWidth / 2; let on = 0;
-    plates.forEach((p, i) => {
-      const b = p.getBoundingClientRect();
-      if (b.left < innerWidth * .85 && b.right > 0 && r.top < innerHeight * .5) p.classList.add('seen');
-      if (b.left <= mid) on = i;
-    });
-    tickEls.forEach((t, i) => t.classList.toggle('on', i === on));
-    num.textContent = String(on + 1).padStart(2, '0');
+    const top = panoTop - scrollY, f = travel ? Math.min(1, Math.max(0, -top / travel)) : 0;
+    if (f !== lastF) { strip.style.transform = `translate3d(${-f * travel}px,0,0)`; lastF = f; }
+    nav.classList.toggle('away', top <= 1 && top + innerHeight + travel >= innerHeight - 1);
+    if (top > innerHeight) return;
+    const x = f * travel; // strip offset
+    const on = Math.min(plates.length - 1, Math.max(0, Math.floor((x + innerWidth / 2) / plateW)));
+    if (top < innerHeight * .5) {
+      const last = Math.floor((x + innerWidth * .85) / plateW);
+      for (let i = Math.max(0, Math.floor(x / plateW)); i <= Math.min(plates.length - 1, last); i++) plates[i].classList.add('seen');
+    }
+    if (on !== lastOn) { tickEls.forEach((t, i) => t.classList.toggle('on', i === on)); num.textContent = String(on + 1).padStart(2, '0'); lastOn = on; }
   };
-  addEventListener('scroll', panoScroll, { passive: true });
+  onScrollFns.push(panoScroll);
   addEventListener('resize', sizePano);
+  addEventListener('load', sizePano);
   $$('img', strip).forEach(img => img.complete || img.addEventListener('load', sizePano, { once: true }));
   sizePano();
+  layoutNav(); measureSpy();
   if (still) plates.forEach(p => p.classList.add('seen'));
 
   // ── The departures board ────────────────────────────────────────────────────────────
@@ -358,106 +409,99 @@
   }, { threshold: .5 });
   boardIO.observe($('#board'));
 
-  // ── Every mile, counted: goo bubbles. Same-ink bubbles fuse when they meet; inks never
-  //    mix (one goo layer per ink). Drag one and the others make room. ───────────────────
+  // ── Every mile, counted: the You tab's tiles. At rest they're one still picture — painted
+  //    once, same-ink tiles fused where they touch. Grab one and it lifts off the sheet: it
+  //    follows your finger anywhere on the screen, and when you let go it springs home and
+  //    settles back into the goo. Nothing animates while nobody is touching them. ─────────
   const field = $('#bubbles');
   const INK = { verm: ['#E8401E', '#F7F4ED'], sky: ['#1180CE', '#F7F4ED'], chrome: ['#F5B301', '#16150F'], palm: ['#12795A', '#F7F4ED'] };
+  // value, label, ink, size, home (centre, as a fraction of the field)
   const data = [
-    ['14', 'trips', 'verm', 1.05], ['23.4k', 'miles', 'sky', 1.25], ['112', 'places', 'palm', 1.0],
-    ['21', 'cities', 'palm', .82], ['64%', 'driven', 'sky', .95], ['31%', 'flown', 'verm', .9],
-    ['0.9×', 'around the earth', 'chrome', 1.02], ['9:40', 'usual departure', 'chrome', .92],
+    ['14', 'trips', 'verm', 1.0, .50, .17], ['23.4k', 'miles', 'sky', 1.22, .44, .44], ['112', 'places', 'palm', 1.04, .70, .80],
+    ['21', 'cities', 'palm', .86, .44, .79], ['64%', 'driven', 'sky', .94, .51, .63], ['31%', 'flown', 'verm', .9, .22, .67],
+    ['0.9×', 'around the earth', 'chrome', 1.0, .16, .45], ['9:40', 'usual departure', 'chrome', .92, .77, .58],
   ];
-  const labels = $('.labels', field);
-  const B = data.map(([v, l, ink, s], i) => {
+  const labels = $('.labels', field), bubCv = $('canvas.goo', field);
+  const B = data.map(([v, l, ink, s, hx, hy]) => {
     const lab = document.createElement('div'); lab.style.color = INK[ink][1];
     lab.innerHTML = `<div><b data-v="${v}">${v}</b><small>${l}</small></div>`;
     labels.append(lab);
-    const a = i / data.length * Math.PI * 2;
-    return { lab, s, ink, x: .5 + Math.cos(a) * .32, y: .5 + Math.sin(a) * .32, vx: 0, vy: 0, w: 0, h: 0, ph: Math.random() * 6.28, held: false };
+    return { lab, s, ink, hx, hy, w: 0, h: 0, away: false };
   });
-  // the tiles are the You tab's rounded rectangles; one canvas, one pass per ink, so the
-  // same ink necks into itself and two inks never blend
-  const bubCv = $('canvas.goo', field);
-  let settling = true;
+  let FW = 0, FH = 0;
+  const box = b => ({ x: b.hx * FW - b.w / 2, y: b.hy * FH - b.h / 2, w: b.w, h: b.h, r: b.h * .3 });
   const paintBubbles = () => {
-    if (!FW || settling) return;
+    if (!FW) return;
     let first = true;
     for (const ink of Object.keys(INK)) {
-      const boxes = B.filter(b => b.ink === ink).map(b => ({ x: b.x * FW - b.w / 2, y: b.y * FH - b.h / 2, w: b.w, h: b.h, r: b.h * .3 }));
+      const boxes = B.filter(b => b.ink === ink && !b.away).map(box);
       if (!boxes.length) continue;
-      paintGoo(bubCv, union(boxes, 26), INK[ink][0], 3, first ? null : [0, 0, FW, FH]);
+      // only the area these tiles can reach is evaluated
+      const x0 = Math.max(0, Math.min(...boxes.map(q => q.x)) - 30), y0 = Math.max(0, Math.min(...boxes.map(q => q.y)) - 30);
+      const x1 = Math.min(FW, Math.max(...boxes.map(q => q.x + q.w)) + 30), y1 = Math.min(FH, Math.max(...boxes.map(q => q.y + q.h)) + 30);
+      if (first) { const c = bubCv.getContext('2d'); bubCv.width = bubCv.width; }
+      paintGoo(bubCv, union(boxes, 26), INK[ink][0], 2.5, [x0, y0, x1, y1]);
       first = false;
     }
   };
-  let FW = 0, FH = 0;
+  const place = b => { const q = box(b); b.lab.style.transform = `translate3d(${q.x}px,${q.y}px,0)`; };
   const sizeBubbles = () => {
     FW = field.clientWidth; FH = field.clientHeight;
-    const base = Math.min(FW, FH) * .19;
-    B.forEach(b => { b.h = base * b.s; b.w = b.h * 1.55; b.lab.style.width = b.w + 'px'; b.lab.style.height = b.h + 'px'; });
+    const dpr = Math.min(devicePixelRatio || 1, 3);
+    bubCv.width = Math.round(FW * dpr); bubCv.height = Math.round(FH * dpr);
+    const base = Math.min(FW, FH) * .17;
+    B.forEach(b => { b.h = base * b.s; b.w = b.h * 1.6; b.lab.style.width = b.w + 'px'; b.lab.style.height = b.h + 'px'; if (!b.away) place(b); });
     paintBubbles();
   };
-  new ResizeObserver(sizeBubbles).observe(field); sizeBubbles();
+  new ResizeObserver(sizeBubbles).observe(field);
 
-  // pointer drag
-  let held = null, px = 0, py = 0;
-  const local = e => { const r = field.getBoundingClientRect(); return [(e.clientX - r.left) / FW, (e.clientY - r.top) / FH]; };
+  // the lifted tile: a real element on a fixed layer, so it can go anywhere on the page
+  const lift = document.createElement('div'); lift.className = 'lift'; lift.setAttribute('aria-hidden', 'true');
+  document.body.append(lift);
+  let held = null, gx = 0, gy = 0, home = null;
+  const sx = new Spring(0, .5, .66), sy = new Spring(0, .5, .66), sc = new Spring(1, .3, .6);
+  const drawLift = () => { lift.style.transform = `translate3d(${sx.v}px,${sy.v}px,0) scale(${sc.v})`; };
+  const flyHome = dt => {
+    const r = field.getBoundingClientRect(), q = box(held || home.b);
+    sx.to = r.left + q.x; sy.to = r.top + q.y;
+    sx.step(dt); sy.step(dt); sc.step(dt); drawLift();
+    const near = Math.abs(sx.v - sx.to) + Math.abs(sy.v - sy.to) < .4 && Math.abs(sx.vel) + Math.abs(sy.vel) < 8 && Math.abs(sc.v - 1) < .004;
+    if (near && !held) {
+      // landed: back into the sheet
+      home.b.away = false; place(home.b); home.b.lab.style.visibility = ''; paintBubbles();
+      lift.style.display = 'none'; home = null; return false;
+    }
+    return true;
+  };
+  const tileAt = e => {
+    const r = field.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    return B.find(b => !b.away && Math.abs(x - b.hx * FW) < b.w / 2 && Math.abs(y - b.hy * FH) < b.h / 2);
+  };
   field.addEventListener('pointerdown', e => {
-    const [x, y] = local(e);
-    held = B.find(b => Math.abs(x - b.x) * FW < b.w / 2 && Math.abs(y - b.y) * FH < b.h / 2) || null;
-    if (held) { field.setPointerCapture(e.pointerId); held.held = true; [px, py] = [x, y]; e.preventDefault(); }
+    const b = tileAt(e); if (!b || home) return;
+    e.preventDefault(); field.setPointerCapture(e.pointerId);
+    const r = field.getBoundingClientRect(), q = box(b);
+    held = b; home = { b }; b.away = true; b.lab.style.visibility = 'hidden';
+    Object.assign(lift.style, { display: 'grid', width: q.w + 'px', height: q.h + 'px', borderRadius: q.r + 'px', background: INK[b.ink][0], color: INK[b.ink][1] });
+    lift.innerHTML = b.lab.innerHTML;
+    sx.v = sx.to = r.left + q.x; sy.v = sy.to = r.top + q.y; sx.vel = sy.vel = 0;
+    gx = e.clientX - sx.v; gy = e.clientY - sy.v;
+    sc.to = still ? 1 : 1.06; wake(t => { const k = sc.step(t); drawLift(); return k || !!held; });
+    drawLift(); paintBubbles();
   });
   field.addEventListener('pointermove', e => {
-    if (!held) return; const [x, y] = local(e);
-    held.vx = (x - px); held.vy = (y - py); held.x = x; held.y = y; [px, py] = [x, y];
+    if (!held) return;
+    sx.v = sx.to = e.clientX - gx; sy.v = sy.to = e.clientY - gy; drawLift();
   });
-  const drop = () => { if (held) { held.held = false; held.vx *= 6; held.vy *= 6; held = null; } };
-  field.addEventListener('pointerup', drop); field.addEventListener('pointercancel', drop);
-
-  let live = false, last = 0;
-  const step = now => {
-    const dt = Math.min(32, now - (last || now)) / 16.67; last = now;
-    B.forEach((b, i) => {
-      if (!b.held) {
-        // a slow drift round a home position, pulled back to the middle
-        b.ph += .006 * dt;
-        b.vx += ((.5 - b.x) * .0005 + Math.cos(b.ph + i) * .00012) * dt;
-        b.vy += ((.5 - b.y) * .0005 + Math.sin(b.ph * 1.3 + i) * .00012) * dt;
-      }
-      // keep apart. Different inks keep a hair of ground between them (inks never mix);
-      // the same ink is let graze, and that is when the goo necks two bubbles into one.
-      B.forEach((o, j) => {
-        if (j <= i) return;
-        const same = b.ink === o.ink;
-        const dx = (o.x - b.x) * FW, dy = (o.y - b.y) * FH;
-        const gap = same ? -b.h * .18 : 10;
-        const needX = (b.w + o.w) / 2 + gap, needY = (b.h + o.h) / 2 + gap;
-        const ox = needX - Math.abs(dx), oy = needY - Math.abs(dy);
-        if (ox > 0 && oy > 0) {
-          const k = .06 * dt;
-          if (ox / needX < oy / needY) { const f = Math.sign(dx || (i - j)) * ox * k / FW; if (!b.held) b.vx -= f; if (!o.held) o.vx += f; }
-          else { const f = Math.sign(dy || (i - j)) * oy * k / FH; if (!b.held) b.vy -= f; if (!o.held) o.vy += f; }
-        } else if (same) {
-          // same ink drifts back toward each other, gently
-          const d = Math.hypot(dx, dy) || 1, f = .00004 * dt;
-          if (!b.held) { b.vx += dx / d * f; b.vy += dy / d * f; }
-          if (!o.held) { o.vx -= dx / d * f; o.vy -= dy / d * f; }
-        }
-      });
-    });
-    B.forEach(b => {
-      if (!b.held) {
-        b.vx *= Math.pow(.9, dt); b.vy *= Math.pow(.9, dt);
-        b.x += b.vx * dt; b.y += b.vy * dt;
-        const mx = b.w / 2 / FW, my = b.h / 2 / FH;
-        if (b.x < mx) { b.x = mx; b.vx *= -.5; } if (b.x > 1 - mx) { b.x = 1 - mx; b.vx *= -.5; }
-        if (b.y < my) { b.y = my; b.vy *= -.5; } if (b.y > 1 - my) { b.y = 1 - my; b.vy *= -.5; }
-      }
-      const t = `translate3d(${b.x * FW - b.w / 2}px,${b.y * FH - b.h / 2}px,0)`;
-      b.lab.style.transform = t;
-    });
-    paintBubbles();
-    if (live) requestAnimationFrame(step);
+  const drop = () => {
+    if (!held) return;
+    held = null; sc.to = 1;
+    if (still) { sx.snap(); sy.snap(); home.b.away = false; place(home.b); home.b.lab.style.visibility = ''; lift.style.display = 'none'; home = null; paintBubbles(); return; }
+    wake(flyHome);
   };
+  field.addEventListener('pointerup', drop); field.addEventListener('pointercancel', drop);
+  addEventListener('scroll', () => { if (home && !held) wake(flyHome); }, { passive: true });
+
   // the numbers roll up when the cluster first comes into view (RollingNumber, roughly)
   const rollNumbers = () => {
     const ease = spring(.95, .96);
@@ -473,13 +517,6 @@
       requestAnimationFrame(tick);
     });
   };
-  let rolled = false;
-  new IntersectionObserver(es => {
-    live = es[0].isIntersecting && !still;
-    if (live) { last = 0; requestAnimationFrame(step); }
-    if (es[0].isIntersecting && !rolled) { rolled = true; rollNumbers(); }
-  }).observe(field);
-  // settle them once so a still page still shows a tidy cluster
-  for (let k = 0; k < 400; k++) step(k * 16.67);
-  last = 0; settling = false; paintBubbles();
+  const rollIO = new IntersectionObserver(es => { if (es[0].isIntersecting) { rollIO.disconnect(); rollNumbers(); } });
+  rollIO.observe(field);
 })();

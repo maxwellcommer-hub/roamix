@@ -13,9 +13,9 @@
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#E8401E">
 <title>Roamix</title>
-<meta name="description" content="Roamix turns the trips your iPhone already logged into one map you can replay — a flythrough of every route, a page for every trip, and your year issued as a ticket. No account. No ads. Nothing leaves your phone.">
+<meta name="description" content="Roamix turns the trips your iPhone already logged into one map you can replay — a flythrough of every route, a page for every trip, and your year issued as a ticket. No account, no ads, no tracking — your library stays on your iPhone and in your own iCloud.">
 <meta property="og:title" content="Roamix — Every trip. One map.">
-<meta property="og:description" content="Replay every trip your iPhone already logged. No account, no ads, nothing leaves your phone.">
+<meta property="og:description" content="Replay every trip your iPhone already logged. No account, no ads, no tracking.">
 <meta property="og:image" content="https://getroamix.com/assets/og.jpg">
 <meta property="og:url" content="https://getroamix.com/">
 <link rel="canonical" href="https://getroamix.com/">
@@ -161,7 +161,7 @@
     <div>
       <p class="kicker rise">Your record</p>
       <h2 class="rise d1">Every mile,<br>counted.</h2>
-      <p class="lede rise d2">How you moved, how far you went and where you keep going back to — each one a number you can pick up and open. Drag them around.</p>
+      <p class="lede rise d2">How you moved, how far you went and where you keep going back to — each one counted for you. Pick one up and throw it — it finds its way home.</p>
       <p class="note rise d3">A sample year</p>
     </div>
     <div class="bubbles rise d2" id="bubbles" role="img" aria-label="A sample year: 14 trips, 23,410 miles, 112 places, 21 cities, 64% driven, 31% flown, 0.9 times around the Earth, 9:40 usual departure.">
@@ -171,7 +171,7 @@
   </div>
 </section>
 
-<!-- ═══ Nothing leaves your phone ═══ -->
+<!-- ═══ Privacy: no account, no ads ═══ -->
 <section class="sect private" id="private">
   <div class="inner">
     <p class="kicker rise">Yours</p>
@@ -197,6 +197,7 @@
         <p>No profile, no analytics, no ads. Maps and place names come from Apple Maps, so the map areas involved go to Apple.</p>
       </article>
     </div>
+    <p class="exception rise"><b>One exception:</b> if you order a plaque, we receive what it takes to make it and post it to you — your name, email and address from checkout, and that one trip’s route, rounded. Nothing else from your library comes with it.</p>
     <p class="policy rise">The full story, in plain words: <a href="1.2/privacy">Privacy Policy</a></p>
   </div>
 </section>
@@ -208,21 +209,13 @@
       <p class="kicker rise">The one thing that costs money</p>
       <h2 class="rise d1">Hang a trip<br>on your wall.</h2>
       <p class="lede rise d2">Pick any trip and Roamix models its route as a 3D-printed, painted plaque, then ships it to your door in the US. The app itself stays whole — nothing in it is locked.</p>
+      <dl class="facts rise d3"><div><dt>From</dt><dd>$59</dd></div><div><dt>Shipping</dt><dd>Free · US</dd></div><div><dt>Made</dt><dd>By hand</dd></div></dl>
       <div class="links rise d3"><a href="1.2/terms-of-sale">Terms of Sale</a><a href="1.2/support">Order help</a></div>
     </div>
     <div class="rise d2">
-      <div class="ticket" id="ticket">
-        <div class="main">
-          <span class="mono">Plaque · ordered in the app</span>
-          <h3>Your route, in relief</h3>
-          <p>Printed and painted to order.</p>
-          <dl>
-            <div><dt>From</dt><dd>$59</dd></div>
-            <div><dt>Shipping</dt><dd>Free · US</dd></div>
-            <div><dt>Mounts</dt><dd>Keyhole</dd></div>
-          </dl>
-        </div>
-        <div class="stubend"><span class="pay">PAY</span></div>
+      <div class="plaque3d" id="plaque3d" data-src="assets/plaque-rmx.png" role="img" aria-label="A real Roamix plaque in 3D: a red route round Ireland, raised over white terrain, in a red frame titled IRELAND. Drag to turn it.">
+        <canvas></canvas>
+        <p class="cap">Ireland · 12 days · drag to turn</p>
       </div>
     </div>
   </div>
@@ -251,5 +244,6 @@
 </footer>
 
 <script src="assets/site.js" defer></script>
+<script src="assets/plaque.js" defer></script>
 </body>
 </html>

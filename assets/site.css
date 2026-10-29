@@ -58,16 +58,17 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 /* ═══ Nav — one bar at the top; pinches into pills as you scroll ═══ */
 .nav { position: fixed; z-index: 50; top: 14px; left: 50%; translate: -50% 0; width: min(760px, calc(100% - 24px)); height: 56px; transition: translate var(--t-settle) var(--ease-settle); }
 .nav.away { translate: -50% -90px; }
-.nav canvas.goo { inset: 0; width: 100%; height: 100%; }
+.nav canvas.goo { inset: 0; width: 100%; height: 100%; filter: brightness(.088); transition: filter .25s ease; }
+.nav.onink canvas.goo { filter: none; }
 .nav .row { position: absolute; inset: 0; display: flex; align-items: stretch; gap: 18px; }
-.nav .brand { flex: 0 0 112px; display: flex; align-items: center; justify-content: center; color: var(--paper); text-decoration: none; transition: color .3s; }
+.nav .brand { flex: 0 0 112px; display: flex; align-items: center; justify-content: center; color: var(--paper); text-decoration: none; transition: color .25s ease; }
 .nav .brand svg { height: 25px; width: auto; fill: currentColor; }
 .nav .links { flex: 1 1 auto; position: relative; display: flex; align-items: center; justify-content: center; gap: 2px; }
-.nav .links a { position: relative; z-index: 1; font: 500 14px/1 var(--text); color: var(--paper); text-decoration: none; padding: 10px 14px; border-radius: 20px; transition: color .25s; }
+.nav .links a { position: relative; z-index: 1; font: 500 14px/1 var(--text); color: var(--paper); text-decoration: none; padding: 10px 14px; border-radius: 20px; transition: color .25s ease; }
 .nav .links a.on { color: var(--ink); }
 /* the stock lozenge under the hovered/current link: its two ends run on different springs,
    so it stretches between links (thinning as it does) and lands round — site.js drives it */
-.nav .pick { position: absolute; left: 0; top: 8px; height: 40px; width: 0; border-radius: 20px; background: var(--paper); opacity: 0; transition: opacity .2s, background-color .3s; pointer-events: none; will-change: transform, width; }
+.nav .pick { position: absolute; left: 0; top: 8px; height: 40px; width: 0; border-radius: 20px; background: var(--paper); opacity: 0; transition: opacity .2s, background-color .25s ease; pointer-events: none; will-change: transform, width; }
 .nav .pick.live { opacity: 1; }
 .nav .cta { flex: 0 0 168px; display: flex; padding: 6px; }
 .nav .cta a { display: flex; align-items: center; justify-content: center; width: 100%; border-radius: 22px; background: var(--verm); color: var(--paper); text-decoration: none; font: 500 14px/1 var(--text); transition: scale var(--t-press) var(--ease-press), background-color .2s; }
@@ -175,6 +176,12 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .miles .inner { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(28px, 5vw, 70px); align-items: center; }
 .bubbles { position: relative; aspect-ratio: 1 / .92; width: 100%; touch-action: pan-y; }
 .bubbles canvas.goo { inset: 0; width: 100%; height: 100%; }
+.bubbles { cursor: grab; user-select: none; -webkit-user-select: none; }
+.bubbles:active { cursor: grabbing; }
+/* a tile you've picked up rides its own fixed layer, free of the section, until it lands home */
+.lift { position: fixed; z-index: 60; left: 0; top: 0; display: none; place-items: center; text-align: center; pointer-events: none; will-change: transform; transform-origin: 50% 50%; }
+.lift b { display: block; font: 400 clamp(17px, 2.1vw, 26px)/1 var(--mono); letter-spacing: -.01em; }
+.lift small { display: block; margin-top: 6px; font: 400 clamp(8px, .75vw, 10px)/1.25 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
 .bubbles .labels { position: absolute; inset: 0; pointer-events: none; }
 .bubbles .labels > div { position: absolute; left: 0; top: 0; display: grid; place-items: center; text-align: center; will-change: transform; }
 .bubbles .labels b { display: block; font: 400 clamp(17px, 2.1vw, 26px)/1 var(--mono); letter-spacing: -.01em; }
@@ -194,6 +201,8 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .stub p { margin: 0; color: var(--ink-soft); font-size: 15.5px; }
 .stub .stamp { position: absolute; right: 18px; top: 16px; width: 74px; height: 74px; border-radius: 50%; border: 2px solid currentColor; display: grid; place-items: center; font: 400 9px/1.2 var(--mono); letter-spacing: .08em; text-align: center; text-transform: uppercase; rotate: -12deg; opacity: 0; scale: 1.35; transition: opacity .2s, scale var(--t-stamp) var(--ease-stamp); }
 .stub.in .stamp { opacity: .9; scale: 1; }
+.private .exception { margin: 34px 0 0; max-width: 62ch; color: var(--ink-soft); font-size: 16px; }
+.private .exception b { color: var(--ink); font-weight: 500; }
 .private .policy { margin-top: 34px; font: 400 12px/1.6 var(--mono); letter-spacing: .04em; text-transform: uppercase; }
 .private .policy a { color: var(--verm-deep); text-underline-offset: 4px; }
 
@@ -216,6 +225,18 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .ticket.in .pay { opacity: 1; scale: 1; }
 .plaque .links { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 14px 22px; font: 400 12px/1.6 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
 .plaque .links a { text-underline-offset: 4px; }
+
+/* the plaque itself, in 3D, from a real order's print files (assets/plaque.js) */
+.plaque3d { position: relative; aspect-ratio: 1 / .92; width: 100%; touch-action: pan-y; cursor: grab; }
+.plaque3d.grab { cursor: grabbing; }
+.plaque3d canvas { position: absolute; inset: -6% -8%; width: 116%; height: 112%; opacity: 0; transition: opacity .6s ease; }
+.plaque3d.ready canvas { opacity: 1; }
+.plaque3d.nogl { background: url("plaque-preview.webp") center / contain no-repeat; }
+.plaque3d .cap { position: absolute; left: 0; right: 0; bottom: -34px; text-align: center; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .85; pointer-events: none; }
+.plaque .facts { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px 28px; }
+.plaque .facts div { font: 400 18px/1.2 var(--mono); }
+.plaque .facts dt { font: 400 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .8; margin-bottom: 6px; }
+.plaque .facts dd { margin: 0; }
 
 /* ═══ Footer — press black, the wordmark at full size ═══ */
 .foot { background: var(--ink); color: var(--paper); padding: clamp(70px, 10vw, 120px) var(--gutter) 40px; overflow: hidden; }
