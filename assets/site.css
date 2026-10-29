@@ -94,8 +94,12 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 }
 @media (min-width: 641px) { .nav .cta a .short { display: none; } }
 
-/* the strip Safari 26 reads its top band's colour from (site.js) */
-.tintbar { position: fixed; z-index: 1; top: 0; left: 0; right: 0; height: 2px; pointer-events: none; background: #E8401E; }
+/* the strips Safari 26 reads its status bar and toolbar colours from (site.js): iOS only,
+   12px, solid, at the very edges, where the bars cover them */
+.tintbar { display: none; position: fixed; z-index: 45; left: 0; right: 0; height: 12px; pointer-events: none; }
+.tintbar.top { top: 0; }
+.tintbar.bottom { bottom: -6px; }
+@supports (-webkit-touch-callout: none) { .tintbar { display: block; } }
 
 /* ── Page transitions: going between the home page and the documents, the nav stays put, the
       red header morphs from one page's shape into the other's, and the rest of the page

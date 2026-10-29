@@ -200,28 +200,34 @@
   // the tour, whichever plate) sits at the top of the screen — and the band reads as the
   // page running on up to the edge.
   const themeMeta = document.querySelector('meta[name="theme-color"]');
-  // Safari 26 ignores theme-color: its top band takes the colour of a fixed element touching
-  // the top edge (else a sample of the page's top). So a thin fixed strip sits there, under
-  // the band where nobody sees it, wearing the live colour.
-  const tintBar = document.createElement('div'); tintBar.className = 'tintbar'; tintBar.setAttribute('aria-hidden', 'true');
-  document.body.prepend(tintBar);
+  // Safari 26 ignores theme-color. It colours its status bar and toolbar from a fixed/sticky
+  // element at each edge (within ~4px of the top / 3px of the bottom, 80%+ wide, 3px+ tall),
+  // and only re-reads a strip's colour when the strip APPEARS. So: a 12px solid strip at each
+  // edge (iOS only, site.css), re-inserted whenever its colour changes.
+  const strip = side => { const d = document.createElement('div'); d.className = 'tintbar ' + side; d.setAttribute('aria-hidden', 'true'); return d; };
+  const bars = { top: strip('top'), bottom: strip('bottom') }, barColour = { top: '', bottom: '' };
+  const setBar = (side, c) => {
+    if (!c || barColour[side] === c) return;
+    barColour[side] = c;
+    const old = bars[side], fresh = strip(side); fresh.style.backgroundColor = c;
+    bars[side] = fresh; old.remove(); document.body.append(fresh);
+  };
   let tintSpans = [], tintNow = '', plateTint = null, tourPin = null;
   const measureTint = () => { tintSpans = $$('[data-tint]').filter(el => !el.classList.contains('plate')).map(el => { const r = el.getBoundingClientRect(); return [r.top + scrollY, r.bottom + scrollY, el.dataset.tint]; }); };
+  const colourAt = y => { for (const [t, b, col] of tintSpans) if (t <= y && b > y) return col; return null; };
   const tint = () => {
     if (!themeMeta) return;
-    let c = plateTint ? plateTint() : null;
-    if (!c) { const y = scrollY + 1; for (const [t, b, col] of tintSpans) if (t <= y && b > y) { c = col; break; } }
-    if (c && c !== tintNow) {
-      themeMeta.setAttribute('content', c); tintNow = c;
-      // Safari 26 prefers a fixed/sticky element touching the top (the tour's pinned frame)
-      // and then the page background over theme-color, so both carry the colour too
-      document.documentElement.style.backgroundColor = c; document.body.style.backgroundColor = c; tintBar.style.backgroundColor = c;
+    const tourC = plateTint ? plateTint() : null;
+    const top = tourC || colourAt(scrollY + 1), bottom = tourC || colourAt(scrollY + innerHeight - 2) || top;
+    if (top && top !== tintNow) {
+      themeMeta.setAttribute('content', top); tintNow = top;
+      document.documentElement.style.backgroundColor = top; document.body.style.backgroundColor = top;
     }
-    // The tour's frame is sticky (native, so it never trails the finger). Safari extends a
-    // sticky element's own colour into a band at the screen edge it nears, so the frame wears
-    // the colour of the plate at that edge: the band reads as more of the plate.
+    setBar('top', top); setBar('bottom', bottom);
+    // The tour's frame is sticky (native, so it never trails the finger), and Safari reads a
+    // sticky element's own colour too: it wears the colour of the plate under the middle.
     if (tourPin) {
-      const pc = (plateTint && plateTint()) || tourPin.dataset.first;
+      const pc = tourC || tourPin.dataset.first;
       if (pc && tourPin.dataset.cur !== pc) { tourPin.style.backgroundColor = pc; tourPin.dataset.cur = pc; }
     }
   };
