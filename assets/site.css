@@ -207,7 +207,8 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .private .policy a { color: var(--verm-deep); text-underline-offset: 4px; }
 
 /* — Hang a trip on your wall: sky field, a ticket — */
-.plaque { background: var(--sky); color: var(--paper); }
+.plaque { background: var(--sky); color: var(--paper); overflow: visible; z-index: 1; }
+.plaque .inner > :first-child { position: relative; z-index: 2; }
 .plaque .inner { display: grid; grid-template-columns: 1.1fr .9fr; gap: clamp(32px, 6vw, 90px); align-items: center; }
 .ticket { position: relative; background: var(--paper); color: var(--ink); border-radius: 26px; display: grid; grid-template-columns: 1fr auto; overflow: hidden; rotate: -3deg; transition: rotate var(--t-settle) var(--ease-settle); }
 .ticket:hover { rotate: -1deg; }
@@ -229,10 +230,10 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 /* the plaque itself, in 3D, from a real order's print files (assets/plaque.js) */
 .plaque3d { position: relative; aspect-ratio: 1 / .92; width: 100%; touch-action: pan-y; cursor: grab; }
 .plaque3d.grab { cursor: grabbing; }
-.plaque3d canvas { position: absolute; inset: -6% -8%; width: 116%; height: 112%; opacity: 0; transition: opacity .6s ease; }
+.plaque3d canvas { position: absolute; left: -30%; top: -30%; width: 160%; height: 160%; opacity: 0; transition: opacity .6s ease; pointer-events: none; }
 .plaque3d.ready canvas { opacity: 1; }
 .plaque3d.nogl { background: url("plaque-preview.webp") center / contain no-repeat; }
-.plaque3d .cap { position: absolute; left: 0; right: 0; bottom: -34px; text-align: center; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .85; pointer-events: none; }
+.plaque3d .cap { position: absolute; left: 0; right: 0; bottom: -56px; text-align: center; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .85; pointer-events: none; }
 .plaque .facts { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px 28px; }
 .plaque .facts div { font: 400 18px/1.2 var(--mono); }
 .plaque .facts dt { font: 400 10px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .8; margin-bottom: 6px; }
