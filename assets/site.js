@@ -11,6 +11,9 @@
   };
   const easeInOut = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
+  // the blurred edges under Safari's bars (styled in site.css; shown on touch screens only)
+  ['top', 'bottom'].forEach(side => { const d = document.createElement('div'); d.className = 'edge ' + side; d.setAttribute('aria-hidden', 'true'); d.innerHTML = '<i></i><i></i><i></i>'; document.body.append(d); });
+
   // ── Reveal on view: .rise and anything that stamps in ──────────────────────────────
   const io = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }

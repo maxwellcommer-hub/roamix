@@ -75,7 +75,6 @@ def shell(p, base, current):
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#E8401E">
 <title>{p["title"]}</title>
 {p["icon"]}
 <link rel="preload" href="{base}fonts/BricolageGrotesque-ExtraBold.ttf" as="font" type="font/ttf" crossorigin>
