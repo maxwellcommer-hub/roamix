@@ -176,7 +176,7 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .miles .inner { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(28px, 5vw, 70px); align-items: center; }
 .bubbles { position: relative; aspect-ratio: 1 / .92; width: 100%; touch-action: pan-y; }
 .bubbles canvas.goo { inset: 0; width: 100%; height: 100%; }
-.bubbles { cursor: grab; user-select: none; -webkit-user-select: none; }
+.bubbles { cursor: grab; user-select: none; -webkit-user-select: none; touch-action: none; }
 .bubbles:active { cursor: grabbing; }
 /* a tile you've picked up rides its own fixed layer, free of the section, until it lands home */
 .lift { position: fixed; z-index: 60; left: 0; top: 0; display: none; place-items: center; text-align: center; pointer-events: none; will-change: transform; transform-origin: 50% 50%; }
