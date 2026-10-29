@@ -204,7 +204,9 @@
   const measureTint = () => { tintSpans = $$('[data-tint]').filter(el => !el.classList.contains('plate')).map(el => { const r = el.getBoundingClientRect(); return [r.top + scrollY, r.bottom + scrollY, el.dataset.tint]; }); };
   const tint = () => {
     if (!themeMeta) return;
-    let c = plateTint ? plateTint() : null;
+    // the tour has one colour of its own (red), so Safari's bar under the toolbar stays one
+    // steady red rather than flicking with every plate
+    let c = null;
     if (!c) { const y = scrollY + 1; for (const [t, b, col] of tintSpans) if (t <= y && b > y) { c = col; break; } }
     if (c && c !== tintNow) {
       themeMeta.setAttribute('content', c); tintNow = c;
