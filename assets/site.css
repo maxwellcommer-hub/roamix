@@ -223,7 +223,6 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .board .cell .leaf { transform-origin: 50% 100%; clip-path: inset(0 0 50% 0); backface-visibility: hidden; z-index: 2; }
 .board .cell.flip .leaf { animation: flap .07s linear; }
 @keyframes flap { from { transform: rotateX(0); } to { transform: rotateX(-90deg); } }
-.fills .tap { margin-top: 14px; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--chrome-deep); }
 .fills .fine { margin-top: 26px; font: 400 10.5px/1.6 var(--mono); letter-spacing: .03em; color: var(--chrome-deep); max-width: 52ch; }
 
 /* — Every mile, counted: vermilion-deep field, goo bubbles in four inks — */
@@ -241,7 +240,6 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 .bubbles .labels > div { position: absolute; left: 0; top: 0; display: grid; place-items: center; text-align: center; will-change: transform; }
 .bubbles .labels b { display: block; font: 400 clamp(17px, 2.1vw, 26px)/1 var(--mono); letter-spacing: -.01em; }
 .bubbles .labels small { display: block; margin-top: 6px; font: 400 clamp(8px, .75vw, 10px)/1.25 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
-.miles .note { margin-top: 18px; font: 400 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; opacity: .85; }
 
 /* — Nothing leaves your phone: bare stock (a reading surface) — */
 .private { background: var(--paper); color: var(--ink); }
