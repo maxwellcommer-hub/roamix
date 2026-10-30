@@ -4,12 +4,12 @@ The public home of Roamix's legal documents, served by GitHub Pages:
 
 | Page | URL | Why it exists |
 |------|-----|----------------|
-| Privacy Policy | https://maxwellcommer-hub.github.io/roamix/privacy | **Required** by App Store Connect; goes in the Privacy Policy URL field. |
-| Terms of Service | https://maxwellcommer-hub.github.io/roamix/terms | Public copy of the in-app Terms, so they are readable before install. |
-| Support | https://maxwellcommer-hub.github.io/roamix/support | **Required** by App Store Connect; goes in the Support URL field. |
-| Landing | https://maxwellcommer-hub.github.io/roamix/ | Links the three. |
-| Terms of Sale | https://maxwellcommer-hub.github.io/roamix/terms-of-sale | The agreement for buying a printed plaque. |
-| Payment received | https://maxwellcommer-hub.github.io/roamix/paid | Stripe's after-payment redirect; hands back to the app. |
+| Privacy Policy | https://getroamix.com/privacy | **Required** by App Store Connect; goes in the Privacy Policy URL field. |
+| Terms of Service | https://getroamix.com/terms | Public copy of the in-app Terms, so they are readable before install. |
+| Support | https://getroamix.com/support | **Required** by App Store Connect; goes in the Support URL field. |
+| Landing | https://getroamix.com/ | Links the three. |
+| Terms of Sale | https://getroamix.com/terms-of-sale | The agreement for buying a printed plaque. |
+| Payment received | https://getroamix.com/paid | Stripe's after-payment redirect; hands back to the app. |
 
 ### One folder per app version
 
@@ -19,11 +19,11 @@ Roamix **1.2** (the first version that can order a printed plaque) reads its own
 
 | Page | URL |
 |------|-----|
-| Privacy Policy | https://maxwellcommer-hub.github.io/roamix/1.2/privacy |
-| Terms of Service | https://maxwellcommer-hub.github.io/roamix/1.2/terms |
-| Terms of Sale | https://maxwellcommer-hub.github.io/roamix/1.2/terms-of-sale |
-| Support | https://maxwellcommer-hub.github.io/roamix/1.2/support |
-| Landing | https://maxwellcommer-hub.github.io/roamix/1.2/ |
+| Privacy Policy | https://getroamix.com/1.2/privacy |
+| Terms of Service | https://getroamix.com/1.2/terms |
+| Terms of Sale | https://getroamix.com/1.2/terms-of-sale |
+| Support | https://getroamix.com/1.2/support |
+| Landing | https://getroamix.com/1.2/ |
 
 A later version that changes the documents gets a folder of its own the same way. `/paid` is
 shared: only 1.2 and later can pay, so it has no older copy to protect.
