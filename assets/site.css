@@ -56,14 +56,14 @@ a { color: inherit; }
 canvas.goo { position: absolute; pointer-events: none; display: block; }
 
 /* ═══ Nav — one bar at the top; pinches into pills as you scroll ═══ */
-.nav { position: fixed; z-index: 50; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 50%; translate: -50% 0; width: max-content; max-width: calc(100% - 24px); height: 56px; transition: translate var(--t-settle) var(--ease-settle); }
+.nav { position: fixed; z-index: 50; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 50%; translate: -50% 0; width: min(760px, calc(100% - 24px)); height: 56px; transition: translate var(--t-settle) var(--ease-settle); }
 .nav.away { translate: -50% calc(-100% - env(safe-area-inset-top, 0px) - 30px); }
 .nav canvas.goo { inset: 0; width: 100%; height: 100%; filter: brightness(.088); transition: filter .25s ease; }
 .nav.onink canvas.goo { filter: none; }
-.nav .row { position: relative; height: 100%; display: flex; align-items: stretch; gap: 18px; }
+.nav .row { position: absolute; inset: 0; display: flex; align-items: stretch; gap: 18px; }
 .nav .brand { flex: 0 0 112px; display: flex; align-items: center; justify-content: center; color: var(--paper); text-decoration: none; transition: color .25s ease; }
 .nav .brand svg { height: 25px; width: auto; fill: currentColor; }
-.nav .links { flex: 0 1 auto; padding: 0 8px; position: relative; display: flex; align-items: center; justify-content: center; gap: 2px; }
+.nav .links { flex: 1 1 auto; position: relative; display: flex; align-items: center; justify-content: center; gap: 2px; }
 .nav .links a { position: relative; z-index: 1; font: 500 14px/1 var(--text); color: var(--paper); text-decoration: none; padding: 10px 14px; border-radius: 20px; transition: color .25s ease; }
 .nav .links a.on { color: var(--ink); }
 /* the stock lozenge under the hovered/current link: its two ends run on different springs,
@@ -81,11 +81,11 @@ canvas.goo { position: absolute; pointer-events: none; display: block; }
 /* phones get the whole bar too, just tighter: a smaller mark, snug links, and a short
    "Get" on the button (the full "Get the app" stays as its accessible name) */
 @media (max-width: 640px) {
-  .nav { height: 48px; width: max-content; max-width: calc(100% - 16px); top: calc(env(safe-area-inset-top, 0px) + 10px); }
+  .nav { height: 48px; width: calc(100% - 16px); top: calc(env(safe-area-inset-top, 0px) + 10px); }
   .nav .row { gap: 8px; }
   .nav .brand { flex: 0 0 62px; }
   .nav .brand svg { height: 19px; }
-  .nav .links { gap: 0; padding: 0 6px; }
+  .nav .links { gap: 0; }
   .nav .links a { font-size: 13px; padding: 9px 7px; }
   .nav .pick { top: 6px; height: 36px; }
   .nav .cta { flex: 0 0 64px; padding: 5px; }
